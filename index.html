@@ -7,6 +7,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- DeviceOrientationControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -169,7 +175,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v1.0.3</div>
+        <div id="version">v2.0.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -178,7 +184,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v1.0.3</div>
+        <div class="version-line">v2.0.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -204,7 +210,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v1.0.3';
+        const VERSION = 'v2.0.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -219,6 +225,11 @@
         const headingEl = document.getElementById('heading');
         const pitchEl = document.getElementById('pitch');
         const rollEl = document.getElementById('roll');
+
+        // Three.js objects
+        let threeCamera = null;
+        let orientationControls = null;
+        let animationId = null;
 
         // Show error message
         function showError(msg) {
@@ -299,80 +310,120 @@
             );
         }
 
-        // Handle device orientation updates
-        function handleOrientation(event) {
-            // Compass heading:
-            // - iOS provides webkitCompassHeading (0-360, 0=North, increases clockwise)
-            // - Alpha alone is NOT compass heading - it's relative to an arbitrary start
-            let heading = null;
-            if (event.webkitCompassHeading !== undefined) {
-                // iOS: use webkitCompassHeading for true north
-                heading = event.webkitCompassHeading;
-            } else if (event.alpha !== null) {
-                // Fallback: alpha (note: not true compass, just relative rotation)
-                // On Android with deviceorientationabsolute, alpha is compass heading
-                heading = event.alpha;
-            }
+        // Initialize Three.js camera and DeviceOrientationControls
+        function initThreeJS() {
+            // Create a perspective camera (we won't render, just use for orientation)
+            threeCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
 
-            if (heading !== null) {
+            // Create DeviceOrientationControls
+            orientationControls = new THREE.DeviceOrientationControls(threeCamera);
+
+            // Start the update loop
+            updateOrientation();
+        }
+
+        // Convert radians to degrees
+        function radToDeg(rad) {
+            return rad * (180 / Math.PI);
+        }
+
+        // Normalize angle to 0-360 range
+        function normalizeAngle(deg) {
+            while (deg < 0) deg += 360;
+            while (deg >= 360) deg -= 360;
+            return deg;
+        }
+
+        // Update orientation display from Three.js camera
+        function updateOrientation() {
+            if (orientationControls) {
+                // Update the controls (reads device orientation)
+                orientationControls.update();
+
+                // Get camera's world direction (where it's pointing)
+                const direction = new THREE.Vector3();
+                threeCamera.getWorldDirection(direction);
+
+                // Calculate heading (compass direction)
+                // direction.x = East component, direction.z = North component (negative z = North in Three.js)
+                // atan2 gives angle from North, clockwise
+                let heading = Math.atan2(direction.x, -direction.z);
+                heading = normalizeAngle(radToDeg(heading));
                 headingEl.textContent = Math.round(heading) + '°';
+
+                // Calculate pitch (elevation angle)
+                // direction.y gives vertical component: positive = up, negative = down
+                // asin gives angle from horizontal
+                const pitch = Math.asin(direction.y);
+                pitchEl.textContent = Math.round(radToDeg(pitch)) + '°';
+
+                // Calculate roll (rotation around viewing axis)
+                // Get the camera's up vector in world space
+                const up = new THREE.Vector3(0, 1, 0);
+                up.applyQuaternion(threeCamera.quaternion);
+
+                // Project up vector onto plane perpendicular to view direction
+                const right = new THREE.Vector3();
+                right.crossVectors(direction, new THREE.Vector3(0, 1, 0)).normalize();
+
+                // If looking straight up or down, right vector is undefined
+                if (right.length() < 0.001) {
+                    right.set(1, 0, 0);
+                }
+
+                const expectedUp = new THREE.Vector3();
+                expectedUp.crossVectors(right, direction).normalize();
+
+                // Roll is angle between actual up and expected up
+                let roll = Math.atan2(
+                    up.dot(right),
+                    up.dot(expectedUp)
+                );
+                rollEl.textContent = Math.round(radToDeg(roll)) + '°';
             }
 
-            // Camera pitch (elevation angle):
-            // Beta = 0 when flat on table, 90 when upright, 180/-180 when face down
-            // For camera viewfinder in portrait mode:
-            //   - beta = 90 → looking at horizon → pitch = 0°
-            //   - beta > 90 (tilted back) → looking up → pitch positive
-            //   - beta < 90 (tilted forward) → looking down → pitch negative
-            // Formula: pitch = beta - 90
-            if (event.beta !== null) {
-                const cameraPitch = event.beta - 90;
-                pitchEl.textContent = Math.round(cameraPitch) + '°';
-            }
-
-            // Roll (tilt left/right around the camera axis)
-            // Gamma: device tilt left/right
-            // Negate so: tilt right = positive roll, tilt left = negative roll
-            if (event.gamma !== null) {
-                rollEl.textContent = Math.round(-event.gamma) + '°';
-            }
+            animationId = requestAnimationFrame(updateOrientation);
         }
 
         // Request device orientation permission
         // iOS 13+ requires explicit permission via user gesture - MUST be called synchronously!
         function requestDeviceOrientation() {
-            // Check if this is iOS 13+ which requires permission
-            if (typeof DeviceOrientationEvent !== 'undefined' &&
-                typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // iOS 13+ - request permission (returns a promise but must be called sync from gesture)
-                DeviceOrientationEvent.requestPermission()
-                    .then((permission) => {
-                        if (permission === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation, true);
-                            console.log('Device orientation permission granted');
-                        } else {
-                            console.warn('Device orientation permission denied');
-                            headingEl.textContent = 'DENIED';
-                            pitchEl.textContent = 'DENIED';
-                            rollEl.textContent = 'DENIED';
-                        }
-                    })
-                    .catch((err) => {
-                        console.error('Device orientation permission error:', err);
-                        headingEl.textContent = 'ERR';
-                        pitchEl.textContent = 'ERR';
-                        rollEl.textContent = 'ERR';
-                    });
-            } else if ('DeviceOrientationEvent' in window) {
-                // Non-iOS or older iOS - just add listener directly
-                window.addEventListener('deviceorientation', handleOrientation, true);
-                console.log('Device orientation listener added (no permission needed)');
-            } else {
-                console.warn('Device orientation not supported');
-                headingEl.textContent = 'N/A';
-                pitchEl.textContent = 'N/A';
-                rollEl.textContent = 'N/A';
-            }
+            return new Promise((resolve) => {
+                if (typeof DeviceOrientationEvent !== 'undefined' &&
+                    typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    // iOS 13+ - request permission
+                    DeviceOrientationEvent.requestPermission()
+                        .then((permission) => {
+                            if (permission === 'granted') {
+                                console.log('Device orientation permission granted');
+                                resolve(true);
+                            } else {
+                                console.warn('Device orientation permission denied');
+                                headingEl.textContent = 'DENIED';
+                                pitchEl.textContent = 'DENIED';
+                                rollEl.textContent = 'DENIED';
+                                resolve(false);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Device orientation permission error:', err);
+                            headingEl.textContent = 'ERR';
+                            pitchEl.textContent = 'ERR';
+                            rollEl.textContent = 'ERR';
+                            resolve(false);
+                        });
+                } else if ('DeviceOrientationEvent' in window) {
+                    // Non-iOS or older iOS - permission not required
+                    console.log('Device orientation available (no permission needed)');
+                    resolve(true);
+                } else {
+                    console.warn('Device orientation not supported');
+                    headingEl.textContent = 'N/A';
+                    pitchEl.textContent = 'N/A';
+                    rollEl.textContent = 'N/A';
+                    resolve(false);
+                }
+            });
         }
 
         // Main start handler - triggered by user tap
@@ -383,14 +434,19 @@
 
             // CRITICAL: Request device orientation FIRST, synchronously from tap
             // iOS requires this to be called directly from user gesture
-            requestDeviceOrientation();
+            const orientationOk = await requestDeviceOrientation();
 
-            // Now request camera (async is ok after orientation request is initiated)
+            // Request camera
             const cameraOk = await requestCamera();
 
             if (cameraOk) {
                 // Request geolocation
                 requestGeolocation();
+
+                // Initialize Three.js orientation tracking
+                if (orientationOk) {
+                    initThreeJS();
+                }
 
                 // Hide start screen and show debug overlay
                 startScreen.classList.add('hidden');
@@ -409,14 +465,31 @@
             }
         }, { passive: false });
 
-        // Handle visibility change (pause/resume video)
+        // Handle visibility change (pause/resume)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 videoElement.pause();
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
             } else {
                 if (videoElement.srcObject) {
                     videoElement.play();
                 }
+                if (orientationControls && !animationId) {
+                    updateOrientation();
+                }
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            if (orientationControls) {
+                orientationControls.dispose();
             }
         });
     </script>
