@@ -185,7 +185,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.1.1</div>
+        <div id="version">v2.1.2</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -194,7 +194,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.1.1</div>
+        <div class="version-line">v2.1.2</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -220,7 +220,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.1.1';
+        const VERSION = 'v2.1.2';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -246,7 +246,8 @@
         const horizonCtx = horizonCanvas.getContext('2d');
 
         // Camera vertical field of view (degrees) - used to map pitch to pixels
-        const VERTICAL_FOV = 60;
+        // Lower value = more line movement per degree of pitch
+        const VERTICAL_FOV = 50;
 
         // Current orientation values (radians) for horizon drawing
         let currentPitchRad = 0;
