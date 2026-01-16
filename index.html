@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Photography Planner</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #version {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #app-title {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        #start-btn {
+            padding: 20px 60px;
+            font-size: 22px;
+            font-weight: 600;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        #start-btn:active {
+            background: #0056b3;
+            transform: scale(0.98);
+        }
+
+        #start-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        #permission-note {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 280px;
+        }
+
+        #error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(200, 50, 50, 0.95);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 85%;
+            z-index: 200;
+            display: none;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        #debug-overlay {
+            position: fixed;
+            top: env(safe-area-inset-top, 10px);
+            left: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #00ff00;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            z-index: 50;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-top: 10px;
+        }
+
+        #debug-overlay .version-line {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #debug-overlay .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        #debug-overlay .label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #debug-overlay .value {
+            color: #00ff00;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <video id="camera-feed" autoplay playsinline muted></video>
+    </div>
+
+    <div id="start-screen">
+        <div id="version">v1.0.0</div>
+        <div id="app-title">AR Photography Planner</div>
+        <button id="start-btn">Start</button>
+        <div id="permission-note">
+            Requires camera, location, and motion sensor access
+        </div>
+    </div>
+
+    <div id="debug-overlay">
+        <div class="version-line">v1.0.0</div>
+        <div class="row">
+            <span class="label">LAT</span>
+            <span class="value" id="lat">--</span>
+        </div>
+        <div class="row">
+            <span class="label">LON</span>
+            <span class="value" id="lon">--</span>
+        </div>
+        <div class="row">
+            <span class="label">HDG α</span>
+            <span class="value" id="heading">--°</span>
+        </div>
+        <div class="row">
+            <span class="label">PIT β</span>
+            <span class="value" id="pitch">--°</span>
+        </div>
+        <div class="row">
+            <span class="label">ROL γ</span>
+            <span class="value" id="roll">--°</span>
+        </div>
+    </div>
+
+    <div id="error-message"></div>
+
+    <script>
+        const VERSION = 'v1.0.0';
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+        const videoElement = document.getElementById('camera-feed');
+        const debugOverlay = document.getElementById('debug-overlay');
+        const errorMessage = document.getElementById('error-message');
+
+        // Debug value elements
+        const latEl = document.getElementById('lat');
+        const lonEl = document.getElementById('lon');
+        const headingEl = document.getElementById('heading');
+        const pitchEl = document.getElementById('pitch');
+        const rollEl = document.getElementById('roll');
+
+        // Show error message
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+        }
+
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        // Request camera access with rear camera preference
+        async function requestCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                });
+                videoElement.srcObject = stream;
+                await videoElement.play();
+                return true;
+            } catch (err) {
+                console.error('Camera error:', err);
+                if (err.name === 'NotAllowedError') {
+                    showError('Camera access denied. Please allow camera access in your browser settings and refresh the page.');
+                } else if (err.name === 'NotFoundError') {
+                    showError('No camera found on this device.');
+                } else {
+                    showError('Could not access camera: ' + err.message);
+                }
+                return false;
+            }
+        }
+
+        // Request geolocation with high accuracy
+        function requestGeolocation() {
+            if (!navigator.geolocation) {
+                console.warn('Geolocation not supported');
+                latEl.textContent = 'N/A';
+                lonEl.textContent = 'N/A';
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                maximumAge: 1000,
+                timeout: 15000
+            };
+
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    latEl.textContent = position.coords.latitude.toFixed(2) + '°';
+                    lonEl.textContent = position.coords.longitude.toFixed(2) + '°';
+                },
+                (err) => {
+                    console.warn('Geolocation error:', err);
+                    switch (err.code) {
+                        case err.PERMISSION_DENIED:
+                            latEl.textContent = 'DENIED';
+                            lonEl.textContent = 'DENIED';
+                            break;
+                        case err.POSITION_UNAVAILABLE:
+                            latEl.textContent = 'N/A';
+                            lonEl.textContent = 'N/A';
+                            break;
+                        case err.TIMEOUT:
+                            latEl.textContent = 'TIMEOUT';
+                            lonEl.textContent = 'TIMEOUT';
+                            break;
+                    }
+                },
+                options
+            );
+        }
+
+        // Handle device orientation updates
+        function handleOrientation(event) {
+            // Alpha: compass heading (0-360 degrees, 0 = North)
+            // Beta: pitch (-180 to 180, front-to-back tilt)
+            // Gamma: roll (-90 to 90, left-to-right tilt)
+
+            if (event.alpha !== null) {
+                headingEl.textContent = Math.round(event.alpha) + '°';
+            }
+            if (event.beta !== null) {
+                pitchEl.textContent = Math.round(event.beta) + '°';
+            }
+            if (event.gamma !== null) {
+                rollEl.textContent = Math.round(event.gamma) + '°';
+            }
+        }
+
+        // Request device orientation permission
+        // iOS 13+ requires explicit permission via user gesture
+        async function requestDeviceOrientation() {
+            if (typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS 13+ requires explicit permission request
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                        return true;
+                    } else {
+                        console.warn('Device orientation permission denied');
+                        headingEl.textContent = 'DENIED';
+                        pitchEl.textContent = 'DENIED';
+                        rollEl.textContent = 'DENIED';
+                        return false;
+                    }
+                } catch (err) {
+                    console.error('Device orientation permission error:', err);
+                    headingEl.textContent = 'ERR';
+                    pitchEl.textContent = 'ERR';
+                    rollEl.textContent = 'ERR';
+                    return false;
+                }
+            } else if ('DeviceOrientationEvent' in window) {
+                // Non-iOS or older iOS - just add listener
+                window.addEventListener('deviceorientation', handleOrientation, true);
+                return true;
+            } else {
+                console.warn('Device orientation not supported');
+                headingEl.textContent = 'N/A';
+                pitchEl.textContent = 'N/A';
+                rollEl.textContent = 'N/A';
+                return false;
+            }
+        }
+
+        // Main start handler - triggered by user tap
+        startBtn.addEventListener('click', async () => {
+            hideError();
+            startBtn.disabled = true;
+            startBtn.textContent = 'Starting...';
+
+            // Request camera first (most critical)
+            const cameraOk = await requestCamera();
+
+            if (cameraOk) {
+                // Request other permissions
+                requestGeolocation();
+                await requestDeviceOrientation();
+
+                // Hide start screen and show debug overlay
+                startScreen.classList.add('hidden');
+                debugOverlay.style.display = 'block';
+            } else {
+                // Camera failed - allow retry
+                startBtn.disabled = false;
+                startBtn.textContent = 'Retry';
+            }
+        });
+
+        // Prevent pull-to-refresh and other gestures
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Handle visibility change (pause/resume video)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                videoElement.pause();
+            } else {
+                if (videoElement.srcObject) {
+                    videoElement.play();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
