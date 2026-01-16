@@ -185,7 +185,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.1.0</div>
+        <div id="version">v2.1.1</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -194,7 +194,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.1.0</div>
+        <div class="version-line">v2.1.1</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -220,7 +220,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.1.0';
+        const VERSION = 'v2.1.1';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -365,8 +365,9 @@
             horizonCtx.save();
 
             // Move to center, apply vertical offset, then rotate
+            // Negate roll: when phone tilts right, horizon in viewfinder tilts left
             horizonCtx.translate(centerX, centerY + verticalOffset);
-            horizonCtx.rotate(currentRollRad);
+            horizonCtx.rotate(-currentRollRad);
 
             // Draw the horizon line
             horizonCtx.beginPath();
