@@ -169,7 +169,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v1.0.2</div>
+        <div id="version">v1.0.3</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -178,7 +178,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v1.0.2</div>
+        <div class="version-line">v1.0.3</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -204,7 +204,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v1.0.2';
+        const VERSION = 'v1.0.3';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -319,32 +319,22 @@
             }
 
             // Camera pitch (elevation angle):
-            // Beta = 0 when flat, 90 when upright, 180/-180 when upside down
-            // For camera: pitch = 0° at horizon, +90° pointing up, -90° pointing down
-            // When phone is upright (beta=90), camera looks at horizon (pitch=0)
-            // Formula: camera_pitch = 90 - beta (for typical portrait use)
+            // Beta = 0 when flat on table, 90 when upright, 180/-180 when face down
+            // For camera viewfinder in portrait mode:
+            //   - beta = 90 → looking at horizon → pitch = 0°
+            //   - beta > 90 (tilted back) → looking up → pitch positive
+            //   - beta < 90 (tilted forward) → looking down → pitch negative
+            // Formula: pitch = beta - 90
             if (event.beta !== null) {
-                let beta = event.beta;
-                let cameraPitch;
-
-                // Handle phone being held in portrait mode
-                if (beta > -90 && beta < 90) {
-                    // Phone tilted forward (screen facing up) or backward
-                    cameraPitch = 90 - beta;
-                } else {
-                    // Phone tilted past vertical (screen facing down)
-                    cameraPitch = beta > 0 ? beta - 90 : beta + 90;
-                }
-
-                // Clamp to -90 to +90
-                cameraPitch = Math.max(-90, Math.min(90, cameraPitch));
+                const cameraPitch = event.beta - 90;
                 pitchEl.textContent = Math.round(cameraPitch) + '°';
             }
 
-            // Roll (tilt left/right)
-            // Gamma: -90 to 90, negative = tilted left, positive = tilted right
+            // Roll (tilt left/right around the camera axis)
+            // Gamma: device tilt left/right
+            // Negate so: tilt right = positive roll, tilt left = negative roll
             if (event.gamma !== null) {
-                rollEl.textContent = Math.round(event.gamma) + '°';
+                rollEl.textContent = Math.round(-event.gamma) + '°';
             }
         }
 
