@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- DeviceOrientationControls -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
+    <!-- SunCalc for sun position calculations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
     <style>
         * {
@@ -335,7 +337,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.2.0</div>
+        <div id="version">v2.3.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -344,7 +346,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.2.0</div>
+        <div class="version-line">v2.3.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -364,6 +366,14 @@
         <div class="row">
             <span class="label">ROLL</span>
             <span class="value" id="roll">--°</span>
+        </div>
+        <div class="row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <span class="label">SUN AZ</span>
+            <span class="value" id="sun-azimuth" style="color: #FFD700;">--°</span>
+        </div>
+        <div class="row">
+            <span class="label">SUN ALT</span>
+            <span class="value" id="sun-altitude" style="color: #FFD700;">--°</span>
         </div>
         <div class="gps-source" id="gps-source">Device GPS</div>
     </div>
@@ -392,7 +402,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.2.0';
+        const VERSION = 'v2.3.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -408,6 +418,8 @@
         const pitchEl = document.getElementById('pitch');
         const rollEl = document.getElementById('roll');
         const gpsSourceEl = document.getElementById('gps-source');
+        const sunAzimuthEl = document.getElementById('sun-azimuth');
+        const sunAltitudeEl = document.getElementById('sun-altitude');
 
         // GPS controls
         const gpsEditBtn = document.getElementById('gps-edit-btn');
@@ -454,6 +466,17 @@
         // Crosshairs size
         const CROSSHAIR_SIZE = 20;
         const CROSSHAIR_GAP = 6;
+
+        // Sun marker settings
+        const SUN_MARKER_RADIUS = 20;
+        const SUN_GLOW_RADIUS = 30;
+
+        // Sun position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
+        let sunAzimuthDeg = 0;
+        let sunAltitudeDeg = 0;
+
+        // Current compass heading (degrees, stored for sun projection)
+        let currentHeadingDeg = 0;
 
         // Show error message
         function showError(msg) {
@@ -627,6 +650,114 @@
             horizonCtx.lineTo(centerX, centerY + CROSSHAIR_SIZE);
 
             horizonCtx.stroke();
+
+            // Draw sun marker
+            drawSunMarker();
+        }
+
+        // Calculate sun position using SunCalc
+        function calculateSunPosition() {
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                sunAzimuthEl.textContent = '--°';
+                sunAltitudeEl.textContent = '--°';
+                return;
+            }
+
+            // Get sun position from SunCalc
+            // Note: SunCalc returns azimuth in radians, measured from SOUTH, clockwise
+            // We need to convert to degrees from NORTH (0-360)
+            const sunPos = SunCalc.getPosition(selectedDateTime, gps.lat, gps.lon);
+
+            // Convert altitude from radians to degrees
+            sunAltitudeDeg = radToDeg(sunPos.altitude);
+
+            // Convert azimuth from radians (from south) to degrees (from north)
+            // SunCalc azimuth: 0 = south, positive = westward
+            // We want: 0 = north, positive = eastward (clockwise)
+            // Conversion: add 180° to flip from south to north reference
+            sunAzimuthDeg = normalizeAngle(radToDeg(sunPos.azimuth) + 180);
+
+            // Update debug display
+            sunAzimuthEl.textContent = Math.round(sunAzimuthDeg) + '°';
+            sunAltitudeEl.textContent = Math.round(sunAltitudeDeg) + '°';
+        }
+
+        // Calculate angular difference with wraparound handling
+        function angleDifference(a, b) {
+            let diff = a - b;
+            while (diff > 180) diff -= 360;
+            while (diff < -180) diff += 360;
+            return diff;
+        }
+
+        // Draw the sun marker on screen
+        function drawSunMarker() {
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) return;
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate horizontal FOV based on aspect ratio
+            const aspectRatio = width / height;
+            const horizontalFOV = VERTICAL_FOV * aspectRatio;
+
+            // Calculate angular difference between sun and camera direction
+            const deltaAzimuth = angleDifference(sunAzimuthDeg, currentHeadingDeg);
+            const deltaPitch = sunAltitudeDeg - radToDeg(currentPitchRad);
+
+            // Convert angular difference to screen coordinates
+            // x: positive deltaAzimuth = sun is to the right
+            // y: positive deltaPitch = sun is above camera direction
+            let sunX = centerX + (deltaAzimuth / horizontalFOV) * width;
+            let sunY = centerY - (deltaPitch / VERTICAL_FOV) * height;
+
+            // Apply roll rotation around screen center
+            if (currentRollRad !== 0) {
+                const dx = sunX - centerX;
+                const dy = sunY - centerY;
+                const cos = Math.cos(-currentRollRad);
+                const sin = Math.sin(-currentRollRad);
+                sunX = centerX + dx * cos - dy * sin;
+                sunY = centerY + dx * sin + dy * cos;
+            }
+
+            // Check if sun is reasonably on screen (within 2x viewport)
+            const margin = Math.max(width, height);
+            if (sunX < -margin || sunX > width + margin ||
+                sunY < -margin || sunY > height + margin) {
+                return; // Sun is too far off screen
+            }
+
+            // Draw sun glow (outer)
+            const gradient = horizonCtx.createRadialGradient(
+                sunX, sunY, SUN_MARKER_RADIUS * 0.5,
+                sunX, sunY, SUN_GLOW_RADIUS
+            );
+            gradient.addColorStop(0, 'rgba(255, 200, 50, 0.6)');
+            gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
+
+            horizonCtx.beginPath();
+            horizonCtx.arc(sunX, sunY, SUN_GLOW_RADIUS, 0, Math.PI * 2);
+            horizonCtx.fillStyle = gradient;
+            horizonCtx.fill();
+
+            // Draw sun circle (main marker)
+            horizonCtx.beginPath();
+            horizonCtx.arc(sunX, sunY, SUN_MARKER_RADIUS, 0, Math.PI * 2);
+            horizonCtx.fillStyle = 'rgba(255, 220, 50, 0.9)';
+            horizonCtx.fill();
+
+            // Draw sun outline
+            horizonCtx.beginPath();
+            horizonCtx.arc(sunX, sunY, SUN_MARKER_RADIUS, 0, Math.PI * 2);
+            horizonCtx.strokeStyle = 'rgba(255, 150, 0, 0.8)';
+            horizonCtx.lineWidth = 2;
+            horizonCtx.stroke();
         }
 
         // Initialize Three.js camera and DeviceOrientationControls
@@ -668,7 +799,11 @@
                 // atan2 gives angle from North, clockwise
                 let heading = Math.atan2(direction.x, -direction.z);
                 heading = normalizeAngle(radToDeg(heading));
+                currentHeadingDeg = heading;
                 headingEl.textContent = Math.round(heading) + '°';
+
+                // Calculate sun position
+                calculateSunPosition();
 
                 // Calculate pitch (elevation angle)
                 // direction.y gives vertical component: positive = up, negative = down
@@ -848,6 +983,8 @@
         datetimePicker.addEventListener('change', (e) => {
             selectedDateTime = new Date(e.target.value);
             console.log('Selected datetime:', selectedDateTime);
+            // Recalculate sun position for new time
+            calculateSunPosition();
         });
 
         // Open GPS modal
@@ -887,6 +1024,7 @@
             manualLon = lon;
             useManualGPS = true;
             updateGPSDisplay();
+            calculateSunPosition();
             gpsModal.classList.remove('visible');
         });
 
@@ -896,6 +1034,7 @@
             manualLat = null;
             manualLon = null;
             updateGPSDisplay();
+            calculateSunPosition();
             gpsModal.classList.remove('visible');
         });
 
