@@ -169,7 +169,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v1.0.0</div>
+        <div id="version">v1.0.1</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -178,7 +178,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v1.0.0</div>
+        <div class="version-line">v1.0.1</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -204,7 +204,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v1.0.0';
+        const VERSION = 'v1.0.1';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -317,40 +317,39 @@
         }
 
         // Request device orientation permission
-        // iOS 13+ requires explicit permission via user gesture
-        async function requestDeviceOrientation() {
+        // iOS 13+ requires explicit permission via user gesture - MUST be called synchronously!
+        function requestDeviceOrientation() {
+            // Check if this is iOS 13+ which requires permission
             if (typeof DeviceOrientationEvent !== 'undefined' &&
                 typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // iOS 13+ requires explicit permission request
-                try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation, true);
-                        return true;
-                    } else {
-                        console.warn('Device orientation permission denied');
-                        headingEl.textContent = 'DENIED';
-                        pitchEl.textContent = 'DENIED';
-                        rollEl.textContent = 'DENIED';
-                        return false;
-                    }
-                } catch (err) {
-                    console.error('Device orientation permission error:', err);
-                    headingEl.textContent = 'ERR';
-                    pitchEl.textContent = 'ERR';
-                    rollEl.textContent = 'ERR';
-                    return false;
-                }
+                // iOS 13+ - request permission (returns a promise but must be called sync from gesture)
+                DeviceOrientationEvent.requestPermission()
+                    .then((permission) => {
+                        if (permission === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation, true);
+                            console.log('Device orientation permission granted');
+                        } else {
+                            console.warn('Device orientation permission denied');
+                            headingEl.textContent = 'DENIED';
+                            pitchEl.textContent = 'DENIED';
+                            rollEl.textContent = 'DENIED';
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('Device orientation permission error:', err);
+                        headingEl.textContent = 'ERR';
+                        pitchEl.textContent = 'ERR';
+                        rollEl.textContent = 'ERR';
+                    });
             } else if ('DeviceOrientationEvent' in window) {
-                // Non-iOS or older iOS - just add listener
+                // Non-iOS or older iOS - just add listener directly
                 window.addEventListener('deviceorientation', handleOrientation, true);
-                return true;
+                console.log('Device orientation listener added (no permission needed)');
             } else {
                 console.warn('Device orientation not supported');
                 headingEl.textContent = 'N/A';
                 pitchEl.textContent = 'N/A';
                 rollEl.textContent = 'N/A';
-                return false;
             }
         }
 
@@ -360,13 +359,16 @@
             startBtn.disabled = true;
             startBtn.textContent = 'Starting...';
 
-            // Request camera first (most critical)
+            // CRITICAL: Request device orientation FIRST, synchronously from tap
+            // iOS requires this to be called directly from user gesture
+            requestDeviceOrientation();
+
+            // Now request camera (async is ok after orientation request is initiated)
             const cameraOk = await requestCamera();
 
             if (cameraOk) {
-                // Request other permissions
+                // Request geolocation
                 requestGeolocation();
-                await requestDeviceOrientation();
 
                 // Hide start screen and show debug overlay
                 startScreen.classList.add('hidden');
