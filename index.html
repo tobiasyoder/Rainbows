@@ -176,6 +176,156 @@
         .hidden {
             display: none !important;
         }
+
+        /* Date/Time Picker */
+        #datetime-container {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: none;
+            padding-bottom: 10px;
+        }
+
+        #datetime-picker {
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* GPS Edit Button */
+        #gps-edit-btn {
+            position: fixed;
+            top: env(safe-area-inset-top, 10px);
+            right: 10px;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 50;
+            display: none;
+            cursor: pointer;
+        }
+
+        #gps-edit-btn:active {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        /* GPS Modal */
+        #gps-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 150;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gps-modal.visible {
+            display: flex;
+        }
+
+        #gps-modal-content {
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 14px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        #gps-modal h3 {
+            color: white;
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #gps-modal label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        #gps-modal input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        #gps-modal input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+
+        .gps-modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .gps-modal-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #gps-apply-btn {
+            background: #007AFF;
+            color: white;
+        }
+
+        #gps-device-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        #gps-cancel-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* GPS source indicator */
+        .gps-source {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gps-source.manual {
+            color: #FFD60A;
+        }
     </style>
 </head>
 <body>
@@ -185,7 +335,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.1.3</div>
+        <div id="version">v2.2.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -194,7 +344,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.1.3</div>
+        <div class="version-line">v2.2.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -215,12 +365,34 @@
             <span class="label">ROLL</span>
             <span class="value" id="roll">--°</span>
         </div>
+        <div class="gps-source" id="gps-source">Device GPS</div>
+    </div>
+
+    <button id="gps-edit-btn">Edit GPS</button>
+
+    <div id="datetime-container">
+        <input type="datetime-local" id="datetime-picker">
+    </div>
+
+    <div id="gps-modal">
+        <div id="gps-modal-content">
+            <h3>Set Location</h3>
+            <label for="gps-lat-input">Latitude</label>
+            <input type="number" id="gps-lat-input" step="any" placeholder="-90 to 90">
+            <label for="gps-lon-input">Longitude</label>
+            <input type="number" id="gps-lon-input" step="any" placeholder="-180 to 180">
+            <div class="gps-modal-buttons">
+                <button class="gps-modal-btn" id="gps-apply-btn">Apply</button>
+                <button class="gps-modal-btn" id="gps-device-btn">Use Device GPS</button>
+                <button class="gps-modal-btn" id="gps-cancel-btn">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.1.3';
+        const VERSION = 'v2.2.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -235,6 +407,20 @@
         const headingEl = document.getElementById('heading');
         const pitchEl = document.getElementById('pitch');
         const rollEl = document.getElementById('roll');
+        const gpsSourceEl = document.getElementById('gps-source');
+
+        // GPS controls
+        const gpsEditBtn = document.getElementById('gps-edit-btn');
+        const gpsModal = document.getElementById('gps-modal');
+        const gpsLatInput = document.getElementById('gps-lat-input');
+        const gpsLonInput = document.getElementById('gps-lon-input');
+        const gpsApplyBtn = document.getElementById('gps-apply-btn');
+        const gpsDeviceBtn = document.getElementById('gps-device-btn');
+        const gpsCancelBtn = document.getElementById('gps-cancel-btn');
+
+        // DateTime picker
+        const datetimeContainer = document.getElementById('datetime-container');
+        const datetimePicker = document.getElementById('datetime-picker');
 
         // Three.js objects
         let threeCamera = null;
@@ -253,6 +439,21 @@
         // Current orientation values (radians) for horizon drawing
         let currentPitchRad = 0;
         let currentRollRad = 0;
+
+        // GPS state
+        let useManualGPS = false;
+        let manualLat = null;
+        let manualLon = null;
+        let deviceLat = null;
+        let deviceLon = null;
+        let geoWatchId = null;
+
+        // Selected date/time for planning (will be used in Step 4)
+        let selectedDateTime = new Date();
+
+        // Crosshairs size
+        const CROSSHAIR_SIZE = 20;
+        const CROSSHAIR_GAP = 6;
 
         // Show error message
         function showError(msg) {
@@ -292,6 +493,29 @@
             }
         }
 
+        // Update GPS display based on current mode
+        function updateGPSDisplay() {
+            if (useManualGPS && manualLat !== null && manualLon !== null) {
+                latEl.textContent = manualLat.toFixed(2) + '°';
+                lonEl.textContent = manualLon.toFixed(2) + '°';
+                gpsSourceEl.textContent = 'Manual GPS';
+                gpsSourceEl.classList.add('manual');
+            } else if (deviceLat !== null && deviceLon !== null) {
+                latEl.textContent = deviceLat.toFixed(2) + '°';
+                lonEl.textContent = deviceLon.toFixed(2) + '°';
+                gpsSourceEl.textContent = 'Device GPS';
+                gpsSourceEl.classList.remove('manual');
+            }
+        }
+
+        // Get current GPS coordinates (manual or device)
+        function getCurrentGPS() {
+            if (useManualGPS && manualLat !== null && manualLon !== null) {
+                return { lat: manualLat, lon: manualLon };
+            }
+            return { lat: deviceLat, lon: deviceLon };
+        }
+
         // Request geolocation with high accuracy
         function requestGeolocation() {
             if (!navigator.geolocation) {
@@ -307,10 +531,11 @@
                 timeout: 15000
             };
 
-            navigator.geolocation.watchPosition(
+            geoWatchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    latEl.textContent = position.coords.latitude.toFixed(2) + '°';
-                    lonEl.textContent = position.coords.longitude.toFixed(2) + '°';
+                    deviceLat = position.coords.latitude;
+                    deviceLon = position.coords.longitude;
+                    updateGPSDisplay();
                 },
                 (err) => {
                     console.warn('Geolocation error:', err);
@@ -341,7 +566,7 @@
             horizonCtx.scale(dpr, dpr);
         }
 
-        // Draw the horizon line based on pitch and roll
+        // Draw the horizon line and crosshairs
         function drawHorizon() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -349,16 +574,16 @@
             // Clear the canvas
             horizonCtx.clearRect(0, 0, width, height);
 
+            // Center of the canvas
+            const centerX = width / 2;
+            const centerY = height / 2;
+
             // Calculate vertical offset based on pitch
             // Pitch up (positive) = looking above horizon = line moves down
             // Pitch down (negative) = looking below horizon = line moves up
             const pitchDeg = radToDeg(currentPitchRad);
             const pixelsPerDegree = height / VERTICAL_FOV;
             const verticalOffset = pitchDeg * pixelsPerDegree;
-
-            // Center of the canvas
-            const centerX = width / 2;
-            const centerY = height / 2;
 
             // Line length - extend well beyond viewport for rotation
             const lineLength = Math.max(width, height) * 2;
@@ -383,6 +608,25 @@
 
             // Restore context state
             horizonCtx.restore();
+
+            // Draw crosshairs at screen center (not affected by orientation)
+            horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            horizonCtx.lineWidth = 2;
+            horizonCtx.beginPath();
+
+            // Horizontal line (with gap in middle)
+            horizonCtx.moveTo(centerX - CROSSHAIR_SIZE, centerY);
+            horizonCtx.lineTo(centerX - CROSSHAIR_GAP, centerY);
+            horizonCtx.moveTo(centerX + CROSSHAIR_GAP, centerY);
+            horizonCtx.lineTo(centerX + CROSSHAIR_SIZE, centerY);
+
+            // Vertical line (with gap in middle)
+            horizonCtx.moveTo(centerX, centerY - CROSSHAIR_SIZE);
+            horizonCtx.lineTo(centerX, centerY - CROSSHAIR_GAP);
+            horizonCtx.moveTo(centerX, centerY + CROSSHAIR_GAP);
+            horizonCtx.lineTo(centerX, centerY + CROSSHAIR_SIZE);
+
+            horizonCtx.stroke();
         }
 
         // Initialize Three.js camera and DeviceOrientationControls
@@ -531,9 +775,14 @@
                     initThreeJS();
                 }
 
-                // Hide start screen and show debug overlay
+                // Initialize datetime picker
+                initDateTimePicker();
+
+                // Hide start screen and show UI elements
                 startScreen.classList.add('hidden');
                 debugOverlay.style.display = 'block';
+                gpsEditBtn.style.display = 'block';
+                datetimeContainer.style.display = 'block';
             } else {
                 // Camera failed - allow retry
                 startBtn.disabled = false;
@@ -580,6 +829,86 @@
         window.addEventListener('resize', () => {
             resizeCanvas();
             drawHorizon();
+        });
+
+        // Initialize datetime picker with current date/time
+        function initDateTimePicker() {
+            const now = new Date();
+            // Format: YYYY-MM-DDTHH:MM
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            datetimePicker.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            selectedDateTime = now;
+        }
+
+        // Handle datetime change
+        datetimePicker.addEventListener('change', (e) => {
+            selectedDateTime = new Date(e.target.value);
+            console.log('Selected datetime:', selectedDateTime);
+        });
+
+        // Open GPS modal
+        gpsEditBtn.addEventListener('click', () => {
+            // Pre-fill with current coordinates
+            const gps = getCurrentGPS();
+            if (gps.lat !== null) {
+                gpsLatInput.value = gps.lat.toFixed(6);
+            }
+            if (gps.lon !== null) {
+                gpsLonInput.value = gps.lon.toFixed(6);
+            }
+            gpsModal.classList.add('visible');
+        });
+
+        // Apply manual GPS
+        gpsApplyBtn.addEventListener('click', () => {
+            const lat = parseFloat(gpsLatInput.value);
+            const lon = parseFloat(gpsLonInput.value);
+
+            if (isNaN(lat) || isNaN(lon)) {
+                alert('Please enter valid coordinates');
+                return;
+            }
+
+            if (lat < -90 || lat > 90) {
+                alert('Latitude must be between -90 and 90');
+                return;
+            }
+
+            if (lon < -180 || lon > 180) {
+                alert('Longitude must be between -180 and 180');
+                return;
+            }
+
+            manualLat = lat;
+            manualLon = lon;
+            useManualGPS = true;
+            updateGPSDisplay();
+            gpsModal.classList.remove('visible');
+        });
+
+        // Revert to device GPS
+        gpsDeviceBtn.addEventListener('click', () => {
+            useManualGPS = false;
+            manualLat = null;
+            manualLon = null;
+            updateGPSDisplay();
+            gpsModal.classList.remove('visible');
+        });
+
+        // Cancel GPS modal
+        gpsCancelBtn.addEventListener('click', () => {
+            gpsModal.classList.remove('visible');
+        });
+
+        // Close modal when clicking outside
+        gpsModal.addEventListener('click', (e) => {
+            if (e.target === gpsModal) {
+                gpsModal.classList.remove('visible');
+            }
         });
     </script>
 </body>
