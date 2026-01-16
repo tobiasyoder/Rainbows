@@ -169,7 +169,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v1.0.1</div>
+        <div id="version">v1.0.2</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -178,7 +178,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v1.0.1</div>
+        <div class="version-line">v1.0.2</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -188,15 +188,15 @@
             <span class="value" id="lon">--</span>
         </div>
         <div class="row">
-            <span class="label">HDG α</span>
+            <span class="label">HDG</span>
             <span class="value" id="heading">--°</span>
         </div>
         <div class="row">
-            <span class="label">PIT β</span>
+            <span class="label">PITCH</span>
             <span class="value" id="pitch">--°</span>
         </div>
         <div class="row">
-            <span class="label">ROL γ</span>
+            <span class="label">ROLL</span>
             <span class="value" id="roll">--°</span>
         </div>
     </div>
@@ -204,7 +204,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v1.0.1';
+        const VERSION = 'v1.0.2';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -301,16 +301,48 @@
 
         // Handle device orientation updates
         function handleOrientation(event) {
-            // Alpha: compass heading (0-360 degrees, 0 = North)
-            // Beta: pitch (-180 to 180, front-to-back tilt)
-            // Gamma: roll (-90 to 90, left-to-right tilt)
+            // Compass heading:
+            // - iOS provides webkitCompassHeading (0-360, 0=North, increases clockwise)
+            // - Alpha alone is NOT compass heading - it's relative to an arbitrary start
+            let heading = null;
+            if (event.webkitCompassHeading !== undefined) {
+                // iOS: use webkitCompassHeading for true north
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha !== null) {
+                // Fallback: alpha (note: not true compass, just relative rotation)
+                // On Android with deviceorientationabsolute, alpha is compass heading
+                heading = event.alpha;
+            }
 
-            if (event.alpha !== null) {
-                headingEl.textContent = Math.round(event.alpha) + '°';
+            if (heading !== null) {
+                headingEl.textContent = Math.round(heading) + '°';
             }
+
+            // Camera pitch (elevation angle):
+            // Beta = 0 when flat, 90 when upright, 180/-180 when upside down
+            // For camera: pitch = 0° at horizon, +90° pointing up, -90° pointing down
+            // When phone is upright (beta=90), camera looks at horizon (pitch=0)
+            // Formula: camera_pitch = 90 - beta (for typical portrait use)
             if (event.beta !== null) {
-                pitchEl.textContent = Math.round(event.beta) + '°';
+                let beta = event.beta;
+                let cameraPitch;
+
+                // Handle phone being held in portrait mode
+                if (beta > -90 && beta < 90) {
+                    // Phone tilted forward (screen facing up) or backward
+                    cameraPitch = 90 - beta;
+                } else {
+                    // Phone tilted past vertical (screen facing down)
+                    cameraPitch = beta > 0 ? beta - 90 : beta + 90;
+                }
+
+                // Clamp to -90 to +90
+                cameraPitch = Math.max(-90, Math.min(90, cameraPitch));
+                pitchEl.textContent = Math.round(cameraPitch) + '°';
             }
+
+            // Roll (tilt left/right)
+            // Gamma: -90 to 90, negative = tilted left, positive = tilted right
             if (event.gamma !== null) {
                 rollEl.textContent = Math.round(event.gamma) + '°';
             }
