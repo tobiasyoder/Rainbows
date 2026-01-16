@@ -337,7 +337,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.3.1</div>
+        <div id="version">v2.3.2</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -346,7 +346,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.3.1</div>
+        <div class="version-line">v2.3.2</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -402,7 +402,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.3.1';
+        const VERSION = 'v2.3.2';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -478,7 +478,9 @@
         // Current compass heading (degrees, stored for sun projection)
         // This uses TRUE compass heading from device, not relative Three.js heading
         let currentHeadingDeg = 0;
+        let targetHeadingDeg = 0;  // Raw compass reading, smoothed into currentHeadingDeg
         let hasCompassHeading = false;
+        const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
 
         // Show error message
         function showError(msg) {
@@ -703,9 +705,10 @@
             const centerX = width / 2;
             const centerY = height / 2;
 
-            // Calculate horizontal FOV based on aspect ratio
+            // Calculate horizontal FOV correctly using tangent formula
+            // hFOV = 2 * atan(aspectRatio * tan(vFOV/2))
             const aspectRatio = width / height;
-            const horizontalFOV = VERTICAL_FOV * aspectRatio;
+            const horizontalFOV = calculateHorizontalFOV(VERTICAL_FOV, aspectRatio);
 
             // Calculate angular difference between sun and camera direction
             const deltaAzimuth = angleDifference(sunAzimuthDeg, currentHeadingDeg);
@@ -779,11 +782,33 @@
             return rad * (180 / Math.PI);
         }
 
+        // Convert degrees to radians
+        function degToRad(deg) {
+            return deg * (Math.PI / 180);
+        }
+
         // Normalize angle to 0-360 range
         function normalizeAngle(deg) {
             while (deg < 0) deg += 360;
             while (deg >= 360) deg -= 360;
             return deg;
+        }
+
+        // Calculate correct horizontal FOV from vertical FOV and aspect ratio
+        // Formula: hFOV = 2 * atan(aspectRatio * tan(vFOV/2))
+        function calculateHorizontalFOV(verticalFOV, aspectRatio) {
+            const vFOVRad = degToRad(verticalFOV);
+            const hFOVRad = 2 * Math.atan(aspectRatio * Math.tan(vFOVRad / 2));
+            return radToDeg(hFOVRad);
+        }
+
+        // Smoothly interpolate between two angles (handles wraparound)
+        function lerpAngle(current, target, factor) {
+            let diff = target - current;
+            // Handle wraparound at 360°
+            while (diff > 180) diff -= 360;
+            while (diff < -180) diff += 360;
+            return normalizeAngle(current + diff * factor);
         }
 
         // Update orientation display from Three.js camera
@@ -805,6 +830,10 @@
                     heading = normalizeAngle(radToDeg(heading));
                     currentHeadingDeg = heading;
                     headingEl.textContent = Math.round(heading) + '° (rel)';
+                } else {
+                    // Smoothly interpolate toward target compass heading
+                    currentHeadingDeg = lerpAngle(currentHeadingDeg, targetHeadingDeg, HEADING_SMOOTHING);
+                    headingEl.textContent = Math.round(currentHeadingDeg) + '°';
                 }
 
                 // Calculate sun position (uses currentHeadingDeg from compass)
@@ -895,18 +924,16 @@
         function handleCompassHeading(event) {
             // iOS provides webkitCompassHeading (0-360, 0 = North, clockwise)
             if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
-                currentHeadingDeg = event.webkitCompassHeading;
+                targetHeadingDeg = event.webkitCompassHeading;
                 hasCompassHeading = true;
-                headingEl.textContent = Math.round(currentHeadingDeg) + '°';
             }
             // For Android, alpha gives compass heading when using deviceorientationabsolute
             // or we can calculate from alpha when absolute is true
             else if (event.absolute === true && event.alpha !== null) {
                 // Alpha is degrees from north, but counterclockwise
                 // Convert to clockwise (standard compass)
-                currentHeadingDeg = normalizeAngle(360 - event.alpha);
+                targetHeadingDeg = normalizeAngle(360 - event.alpha);
                 hasCompassHeading = true;
-                headingEl.textContent = Math.round(currentHeadingDeg) + '°';
             }
         }
 
