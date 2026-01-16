@@ -337,7 +337,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.3.0</div>
+        <div id="version">v2.3.1</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -346,7 +346,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.3.0</div>
+        <div class="version-line">v2.3.1</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -402,7 +402,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.3.0';
+        const VERSION = 'v2.3.1';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -476,7 +476,9 @@
         let sunAltitudeDeg = 0;
 
         // Current compass heading (degrees, stored for sun projection)
+        // This uses TRUE compass heading from device, not relative Three.js heading
         let currentHeadingDeg = 0;
+        let hasCompassHeading = false;
 
         // Show error message
         function showError(msg) {
@@ -795,14 +797,17 @@
                 threeCamera.getWorldDirection(direction);
 
                 // Calculate heading (compass direction)
-                // direction.x = East component, direction.z = North component (negative z = North in Three.js)
-                // atan2 gives angle from North, clockwise
-                let heading = Math.atan2(direction.x, -direction.z);
-                heading = normalizeAngle(radToDeg(heading));
-                currentHeadingDeg = heading;
-                headingEl.textContent = Math.round(heading) + '°';
+                // Only use Three.js heading as fallback if we don't have true compass heading
+                // True compass heading is provided by handleCompassHeading via webkitCompassHeading
+                if (!hasCompassHeading) {
+                    // Fallback: use Three.js relative heading (not true north!)
+                    let heading = Math.atan2(direction.x, -direction.z);
+                    heading = normalizeAngle(radToDeg(heading));
+                    currentHeadingDeg = heading;
+                    headingEl.textContent = Math.round(heading) + '° (rel)';
+                }
 
-                // Calculate sun position
+                // Calculate sun position (uses currentHeadingDeg from compass)
                 calculateSunPosition();
 
                 // Calculate pitch (elevation angle)
@@ -885,6 +890,38 @@
             });
         }
 
+        // Handle compass heading from device orientation events
+        // This provides TRUE compass heading (relative to magnetic/true north)
+        function handleCompassHeading(event) {
+            // iOS provides webkitCompassHeading (0-360, 0 = North, clockwise)
+            if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+                currentHeadingDeg = event.webkitCompassHeading;
+                hasCompassHeading = true;
+                headingEl.textContent = Math.round(currentHeadingDeg) + '°';
+            }
+            // For Android, alpha gives compass heading when using deviceorientationabsolute
+            // or we can calculate from alpha when absolute is true
+            else if (event.absolute === true && event.alpha !== null) {
+                // Alpha is degrees from north, but counterclockwise
+                // Convert to clockwise (standard compass)
+                currentHeadingDeg = normalizeAngle(360 - event.alpha);
+                hasCompassHeading = true;
+                headingEl.textContent = Math.round(currentHeadingDeg) + '°';
+            }
+        }
+
+        // Start listening for compass heading
+        function startCompassListener() {
+            // Try deviceorientationabsolute first (provides true north on Android)
+            if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', handleCompassHeading, true);
+                console.log('Using deviceorientationabsolute for compass');
+            }
+            // Fall back to regular deviceorientation (works on iOS with webkitCompassHeading)
+            window.addEventListener('deviceorientation', handleCompassHeading, true);
+            console.log('Using deviceorientation for compass');
+        }
+
         // Main start handler - triggered by user tap
         startBtn.addEventListener('click', async () => {
             hideError();
@@ -908,6 +945,8 @@
                 // Initialize Three.js orientation tracking
                 if (orientationOk) {
                     initThreeJS();
+                    // Start compass listener for true north heading
+                    startCompassListener();
                 }
 
                 // Initialize datetime picker
