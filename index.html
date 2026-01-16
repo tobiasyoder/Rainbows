@@ -43,6 +43,15 @@
             object-fit: cover;
         }
 
+        #horizon-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
         #start-screen {
             position: fixed;
             top: 0;
@@ -172,10 +181,11 @@
 <body>
     <div id="video-container">
         <video id="camera-feed" autoplay playsinline muted></video>
+        <canvas id="horizon-canvas"></canvas>
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.0.0</div>
+        <div id="version">v2.1.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -184,7 +194,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.0.0</div>
+        <div class="version-line">v2.1.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -210,7 +220,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.0.0';
+        const VERSION = 'v2.1.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -230,6 +240,17 @@
         let threeCamera = null;
         let orientationControls = null;
         let animationId = null;
+
+        // Horizon canvas
+        const horizonCanvas = document.getElementById('horizon-canvas');
+        const horizonCtx = horizonCanvas.getContext('2d');
+
+        // Camera vertical field of view (degrees) - used to map pitch to pixels
+        const VERTICAL_FOV = 60;
+
+        // Current orientation values (radians) for horizon drawing
+        let currentPitchRad = 0;
+        let currentRollRad = 0;
 
         // Show error message
         function showError(msg) {
@@ -310,6 +331,57 @@
             );
         }
 
+        // Resize canvas to match viewport
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            horizonCanvas.width = window.innerWidth * dpr;
+            horizonCanvas.height = window.innerHeight * dpr;
+            horizonCtx.scale(dpr, dpr);
+        }
+
+        // Draw the horizon line based on pitch and roll
+        function drawHorizon() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // Clear the canvas
+            horizonCtx.clearRect(0, 0, width, height);
+
+            // Calculate vertical offset based on pitch
+            // Pitch up (positive) = looking above horizon = line moves down
+            // Pitch down (negative) = looking below horizon = line moves up
+            const pitchDeg = radToDeg(currentPitchRad);
+            const pixelsPerDegree = height / VERTICAL_FOV;
+            const verticalOffset = pitchDeg * pixelsPerDegree;
+
+            // Center of the canvas
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Line length - extend well beyond viewport for rotation
+            const lineLength = Math.max(width, height) * 2;
+
+            // Save context state
+            horizonCtx.save();
+
+            // Move to center, apply vertical offset, then rotate
+            horizonCtx.translate(centerX, centerY + verticalOffset);
+            horizonCtx.rotate(currentRollRad);
+
+            // Draw the horizon line
+            horizonCtx.beginPath();
+            horizonCtx.moveTo(-lineLength, 0);
+            horizonCtx.lineTo(lineLength, 0);
+
+            // Style: white, 50% opacity, 2px thick
+            horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            horizonCtx.lineWidth = 2;
+            horizonCtx.stroke();
+
+            // Restore context state
+            horizonCtx.restore();
+        }
+
         // Initialize Three.js camera and DeviceOrientationControls
         function initThreeJS() {
             // Create a perspective camera (we won't render, just use for orientation)
@@ -355,6 +427,7 @@
                 // direction.y gives vertical component: positive = up, negative = down
                 // asin gives angle from horizontal
                 const pitch = Math.asin(direction.y);
+                currentPitchRad = pitch;
                 pitchEl.textContent = Math.round(radToDeg(pitch)) + '°';
 
                 // Calculate roll (rotation around viewing axis)
@@ -379,7 +452,11 @@
                     up.dot(right),
                     up.dot(expectedUp)
                 );
+                currentRollRad = roll;
                 rollEl.textContent = Math.round(radToDeg(roll)) + '°';
+
+                // Draw the horizon line
+                drawHorizon();
             }
 
             animationId = requestAnimationFrame(updateOrientation);
@@ -443,6 +520,9 @@
                 // Request geolocation
                 requestGeolocation();
 
+                // Initialize canvas for horizon line
+                resizeCanvas();
+
                 // Initialize Three.js orientation tracking
                 if (orientationOk) {
                     initThreeJS();
@@ -491,6 +571,12 @@
             if (orientationControls) {
                 orientationControls.dispose();
             }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            drawHorizon();
         });
     </script>
 </body>
