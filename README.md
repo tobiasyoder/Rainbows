@@ -1,2 +1,3 @@
 # Rainbows
 AR Rainbow Position PWA
+Front-end-only PWA for planning outdoor photography. It uses your device camera as an AR viewfinder, overlaying the sun's position and potential rainbow arcs based on your location and a selected date/time. Point your phone at the sky to see where the sun will be and where a rainbow would appear *if* there is water vapor present and the sun is unobscured. This could be a classic rainbow from a rainshower, or it could be from sea-spray, waterfall mist, a hoze, or any other type of water vapor. No backend, no accounts. Just a single page app that runs entirely in the browser.
