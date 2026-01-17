@@ -69,7 +69,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -98,23 +98,27 @@
             padding: 20px 60px;
             font-size: 22px;
             font-weight: 600;
-            background: #007AFF;
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.9) 0%, rgba(0, 86, 179, 0.9) 100%);
             color: white;
-            border: none;
-            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
             cursor: pointer;
             touch-action: manipulation;
-            transition: background 0.2s, transform 0.1s;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         #start-btn:active {
-            background: #0056b3;
+            background: linear-gradient(135deg, rgba(0, 86, 179, 0.95) 0%, rgba(0, 60, 140, 0.95) 100%);
             transform: scale(0.98);
         }
 
         #start-btn:disabled {
-            background: #555;
+            background: linear-gradient(135deg, rgba(85, 85, 85, 0.8) 0%, rgba(60, 60, 60, 0.8) 100%);
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         #permission-note {
@@ -146,18 +150,69 @@
             position: fixed;
             top: env(safe-area-inset-top, 10px);
             left: 10px;
-            background: rgba(0, 0, 0, 0.75);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #00ff00;
-            padding: 12px 14px;
-            border-radius: 10px;
+            padding: 0;
+            border-radius: 16px;
             font-family: 'Courier New', Courier, monospace;
             font-size: 13px;
             line-height: 1.7;
             z-index: 50;
             display: none;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             margin-top: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            min-width: 160px;
+            overflow: hidden;
+        }
+
+        #debug-overlay .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #debug-overlay .panel-header:active {
+            opacity: 0.7;
+        }
+
+        #debug-overlay .panel-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        #debug-overlay .panel-toggle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        #debug-overlay .panel-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        #debug-overlay .panel-content {
+            padding: 12px 14px;
+            max-height: 600px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+        }
+
+        #debug-overlay .panel-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
         }
 
         #debug-overlay .version-line {
@@ -165,7 +220,60 @@
             font-size: 11px;
             margin-bottom: 8px;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        #debug-overlay .section {
+            margin-bottom: 8px;
+        }
+
+        #debug-overlay .section:last-child {
+            margin-bottom: 0;
+        }
+
+        #debug-overlay .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #debug-overlay .section-header:active {
+            opacity: 0.7;
+        }
+
+        #debug-overlay .section-title {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #debug-overlay .section-toggle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        #debug-overlay .section-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        #debug-overlay .section-content {
+            overflow: hidden;
+            max-height: 200px;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+
+        #debug-overlay .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
         }
 
         #debug-overlay .row {
@@ -184,6 +292,71 @@
             min-width: 80px;
         }
 
+        /* Inline compass offset control in debug panel */
+        #debug-overlay .compass-control {
+            margin-top: 4px;
+        }
+
+        #debug-overlay .compass-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        #debug-overlay .compass-slider {
+            flex: 1;
+            height: 24px;
+            position: relative;
+            touch-action: pan-x;
+            cursor: ew-resize;
+        }
+
+        #debug-overlay .compass-slider .slider-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        #debug-overlay .compass-slider .slider-track::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: -3px;
+            width: 1px;
+            height: 9px;
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateX(-50%);
+        }
+
+        #debug-overlay .compass-slider .slider-thumb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #debug-overlay .compass-reset {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 9px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -199,16 +372,59 @@
             padding-bottom: 10px;
         }
 
+        .datetime-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
         #datetime-picker {
-            background: rgba(0, 0, 0, 0.75);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
+            border-radius: 14px;
+            padding: 12px 18px;
             font-size: 16px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        #time-scrubber {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 8px 16px;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            touch-action: pan-x;
+            cursor: ew-resize;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #time-scrubber .scrub-icon {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        #time-scrubber .scrub-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        #time-scrubber.active {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         /* GPS Edit Button */
@@ -217,22 +433,25 @@
             top: env(safe-area-inset-top, 10px);
             right: 10px;
             margin-top: 10px;
-            background: rgba(0, 0, 0, 0.75);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
+            border-radius: 12px;
+            padding: 10px 14px;
             font-size: 12px;
             font-family: 'Courier New', Courier, monospace;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 50;
             display: none;
             cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
         }
 
         #gps-edit-btn:active {
-            background: rgba(0, 0, 0, 0.9);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+            transform: scale(0.98);
         }
 
         /* GPS Modal */
@@ -242,7 +461,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 150;
             display: none;
             justify-content: center;
@@ -254,19 +475,22 @@
         }
 
         #gps-modal-content {
-            background: rgba(30, 30, 30, 0.95);
-            border-radius: 14px;
-            padding: 24px;
+            background: linear-gradient(135deg, rgba(40, 40, 50, 0.9) 0%, rgba(20, 20, 30, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 28px;
             width: 90%;
             max-width: 320px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         #gps-modal h3 {
             color: white;
-            margin: 0 0 20px 0;
-            font-size: 18px;
+            margin: 0 0 24px 0;
+            font-size: 20px;
+            font-weight: 600;
             text-align: center;
         }
 
@@ -274,49 +498,60 @@
             color: rgba(255, 255, 255, 0.7);
             font-size: 13px;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         #gps-modal input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 14px;
             color: white;
             font-size: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             box-sizing: border-box;
+            transition: all 0.2s ease;
         }
 
         #gps-modal input:focus {
             outline: none;
-            border-color: #007AFF;
+            border-color: rgba(0, 122, 255, 0.6);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
         }
 
         .gps-modal-buttons {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 24px;
         }
 
         .gps-modal-btn {
             padding: 14px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .gps-modal-btn:active {
+            transform: scale(0.98);
         }
 
         #gps-apply-btn {
-            background: #007AFF;
+            background: linear-gradient(135deg, #007AFF 0%, #0056b3 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
         }
 
         #gps-device-btn {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: white;
         }
 
@@ -347,7 +582,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.5.0</div>
+        <div id="version">v3.0.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -356,42 +591,128 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.5.0</div>
-        <div class="row">
-            <span class="label">LAT</span>
-            <span class="value" id="lat">--</span>
+        <!-- Master Panel Header -->
+        <div class="panel-header" onclick="togglePanel()">
+            <span class="panel-title">Control Panel</span>
+            <span class="panel-toggle" id="panel-toggle">▼</span>
         </div>
-        <div class="row">
-            <span class="label">LON</span>
-            <span class="value" id="lon">--</span>
+
+        <div class="panel-content" id="panel-content">
+            <div class="version-line">v3.0.0</div>
+
+            <!-- Location Section -->
+            <div class="section" data-section="location">
+                <div class="section-header" onclick="toggleSection('location'); event.stopPropagation();">
+                    <span class="section-title">Location</span>
+                    <span class="section-toggle" id="toggle-location">▼</span>
+                </div>
+                <div class="section-content" id="content-location">
+                    <div class="row">
+                        <span class="label">LAT</span>
+                        <span class="value" id="lat">--</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">LON</span>
+                        <span class="value" id="lon">--</span>
+                    </div>
+                    <div class="gps-source" id="gps-source">Device GPS</div>
+                </div>
+            </div>
+
+            <!-- Orientation Section -->
+            <div class="section" data-section="orientation">
+                <div class="section-header" onclick="toggleSection('orientation'); event.stopPropagation();">
+                    <span class="section-title">Orientation</span>
+                    <span class="section-toggle" id="toggle-orientation">▼</span>
+                </div>
+                <div class="section-content" id="content-orientation">
+                    <div class="row">
+                        <span class="label">HDG</span>
+                        <span class="value" id="heading">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">PITCH</span>
+                        <span class="value" id="pitch">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">ROLL</span>
+                        <span class="value" id="roll">--°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sun Section -->
+            <div class="section" data-section="sun">
+                <div class="section-header" onclick="toggleSection('sun'); event.stopPropagation();">
+                    <span class="section-title">Sun Position</span>
+                    <span class="section-toggle" id="toggle-sun">▼</span>
+                </div>
+                <div class="section-content" id="content-sun">
+                    <div class="row">
+                        <span class="label">SUN AZ</span>
+                        <span class="value" id="sun-azimuth" style="color: #FFD700;">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">SUN ALT</span>
+                        <span class="value" id="sun-altitude" style="color: #FFD700;">--°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anti-solar Section -->
+            <div class="section" data-section="antisolar">
+                <div class="section-header" onclick="toggleSection('antisolar'); event.stopPropagation();">
+                    <span class="section-title">Anti-solar</span>
+                    <span class="section-toggle" id="toggle-antisolar">▼</span>
+                </div>
+                <div class="section-content" id="content-antisolar">
+                    <div class="row">
+                        <span class="label">AS AZ</span>
+                        <span class="value" id="antisolar-azimuth" style="color: #87CEEB;">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">AS ALT</span>
+                        <span class="value" id="antisolar-altitude" style="color: #87CEEB;">--°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compass Calibration Section -->
+            <div class="section" data-section="compass">
+                <div class="section-header" onclick="toggleSection('compass'); event.stopPropagation();">
+                    <span class="section-title">Compass Calibration</span>
+                    <span class="section-toggle" id="toggle-compass">▼</span>
+                </div>
+                <div class="section-content" id="content-compass">
+                    <div class="row">
+                        <span class="label">OFFSET</span>
+                        <span class="value" id="compass-offset-value">0°</span>
+                    </div>
+                    <div class="compass-control">
+                        <div class="compass-slider-container">
+                            <div class="compass-slider" id="compass-offset-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-thumb" id="compass-offset-thumb"></div>
+                            </div>
+                            <button class="compass-reset" id="compass-offset-reset">RST</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="row">
-            <span class="label">HDG</span>
-            <span class="value" id="heading">--°</span>
-        </div>
-        <div class="row">
-            <span class="label">PITCH</span>
-            <span class="value" id="pitch">--°</span>
-        </div>
-        <div class="row">
-            <span class="label">ROLL</span>
-            <span class="value" id="roll">--°</span>
-        </div>
-        <div class="row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">
-            <span class="label">SUN AZ</span>
-            <span class="value" id="sun-azimuth" style="color: #FFD700;">--°</span>
-        </div>
-        <div class="row">
-            <span class="label">SUN ALT</span>
-            <span class="value" id="sun-altitude" style="color: #FFD700;">--°</span>
-        </div>
-        <div class="gps-source" id="gps-source">Device GPS</div>
     </div>
 
     <button id="gps-edit-btn">Edit GPS</button>
 
     <div id="datetime-container">
-        <input type="datetime-local" id="datetime-picker">
+        <div class="datetime-wrapper">
+            <input type="datetime-local" id="datetime-picker">
+            <div id="time-scrubber">
+                <span class="scrub-icon">◀</span>
+                <span class="scrub-label" id="scrub-label">Swipe to scrub</span>
+                <span class="scrub-icon">▶</span>
+            </div>
+        </div>
     </div>
 
     <div id="gps-modal">
@@ -412,7 +733,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.5.0';
+        const VERSION = 'v3.0.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -430,6 +751,8 @@
         const gpsSourceEl = document.getElementById('gps-source');
         const sunAzimuthEl = document.getElementById('sun-azimuth');
         const sunAltitudeEl = document.getElementById('sun-altitude');
+        const antisolarAzimuthEl = document.getElementById('antisolar-azimuth');
+        const antisolarAltitudeEl = document.getElementById('antisolar-altitude');
 
         // GPS controls
         const gpsEditBtn = document.getElementById('gps-edit-btn');
@@ -440,9 +763,41 @@
         const gpsDeviceBtn = document.getElementById('gps-device-btn');
         const gpsCancelBtn = document.getElementById('gps-cancel-btn');
 
-        // DateTime picker
+        // DateTime picker and time scrubber
         const datetimeContainer = document.getElementById('datetime-container');
         const datetimePicker = document.getElementById('datetime-picker');
+        const timeScrubber = document.getElementById('time-scrubber');
+        const scrubLabel = document.getElementById('scrub-label');
+
+        // Compass offset controls (now inside debug panel)
+        const compassOffsetSlider = document.getElementById('compass-offset-slider');
+        const compassOffsetThumb = document.getElementById('compass-offset-thumb');
+        const compassOffsetValue = document.getElementById('compass-offset-value');
+        const compassOffsetReset = document.getElementById('compass-offset-reset');
+
+        // Panel content for master collapse
+        const panelContent = document.getElementById('panel-content');
+        const panelToggle = document.getElementById('panel-toggle');
+
+        // Compass offset value (degrees)
+        let compassOffset = 0;
+
+        // Panel collapsed state
+        let panelCollapsed = false;
+
+        // Time scrubber state
+        let scrubStartX = 0;
+        let scrubStartTime = null;
+        let isScrubbing = false;
+
+        // Collapsible sections state
+        const sectionStates = {
+            location: true,
+            orientation: true,
+            sun: true,
+            antisolar: true,
+            compass: true
+        };
 
         // Three.js objects
         let threeCamera = null;
@@ -455,6 +810,8 @@
         let gridCamera = null;
         let gridGroup = null;
         let sunMarker = null;  // Three.js sun marker sprite
+        let antiSolarMarker = null;  // Anti-solar point marker
+        let rainbowRing = null;  // Rainbow ring around anti-solar point
 
         // Horizon canvas
         const horizonCanvas = document.getElementById('horizon-canvas');
@@ -491,12 +848,49 @@
         let sunAzimuthDeg = 0;
         let sunAltitudeDeg = 0;
 
+        // Anti-solar point position (opposite of sun)
+        let antiSolarAzimuthDeg = 0;
+        let antiSolarAltitudeDeg = 0;
+
         // Current compass heading (degrees, stored for sun projection)
         // This uses TRUE compass heading from device, not relative Three.js heading
         let currentHeadingDeg = 0;
         let targetHeadingDeg = 0;  // Raw compass reading, smoothed into currentHeadingDeg
         let hasCompassHeading = false;
         const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
+
+        // Toggle entire panel
+        function togglePanel() {
+            panelCollapsed = !panelCollapsed;
+            if (panelCollapsed) {
+                panelContent.classList.add('collapsed');
+                panelToggle.classList.add('collapsed');
+            } else {
+                panelContent.classList.remove('collapsed');
+                panelToggle.classList.remove('collapsed');
+            }
+        }
+
+        // Toggle collapsible section
+        function toggleSection(section) {
+            sectionStates[section] = !sectionStates[section];
+            const content = document.getElementById(`content-${section}`);
+            const toggle = document.getElementById(`toggle-${section}`);
+            if (sectionStates[section]) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            }
+        }
+
+        // Apply compass offset to the entire grid coordinate system
+        function applyCompassOffset() {
+            if (!gridGroup) return;
+            // Rotate the entire grid around Y axis by the compass offset
+            gridGroup.rotation.y = degToRad(-compassOffset);
+        }
 
         // Show error message
         function showError(msg) {
@@ -647,7 +1041,10 @@
             if (gps.lat === null || gps.lon === null) {
                 sunAzimuthEl.textContent = '--°';
                 sunAltitudeEl.textContent = '--°';
+                antisolarAzimuthEl.textContent = '--°';
+                antisolarAltitudeEl.textContent = '--°';
                 updateSunMarkerPosition();  // Hide sun marker when no GPS
+                updateAntiSolarMarkerPosition();  // Hide anti-solar marker when no GPS
                 return;
             }
 
@@ -663,14 +1060,25 @@
             // SunCalc azimuth: 0 = south, positive = westward
             // We want: 0 = north, positive = eastward (clockwise)
             // Conversion: add 180° to flip from south to north reference
+            // Also apply compass offset for calibration
             sunAzimuthDeg = normalizeAngle(radToDeg(sunPos.azimuth) + 180);
+
+            // Calculate anti-solar point (opposite of sun)
+            // Azimuth: 180° opposite of sun
+            // Altitude: negative of sun's altitude (if sun is 30° up, anti-solar is 30° down)
+            antiSolarAzimuthDeg = normalizeAngle(sunAzimuthDeg + 180);
+            antiSolarAltitudeDeg = -sunAltitudeDeg;
 
             // Update debug display
             sunAzimuthEl.textContent = Math.round(sunAzimuthDeg) + '°';
             sunAltitudeEl.textContent = Math.round(sunAltitudeDeg) + '°';
+            antisolarAzimuthEl.textContent = Math.round(antiSolarAzimuthDeg) + '°';
+            antisolarAltitudeEl.textContent = Math.round(antiSolarAltitudeDeg) + '°';
 
             // Update the Three.js sun marker position
             updateSunMarkerPosition();
+            // Update anti-solar marker and rainbow
+            updateAntiSolarMarkerPosition();
         }
 
         // Calculate angular difference with wraparound handling
@@ -828,6 +1236,7 @@
 
         // Update sun marker position in the Three.js scene
         // Uses the same sphere coordinate system as the grid
+        // Compass offset is applied to the entire gridGroup rotation, not individual markers
         function updateSunMarkerPosition() {
             if (!sunMarker || !gridGroup) return;
 
@@ -856,6 +1265,230 @@
             const z = -Math.cos(azRad) * r;
 
             sunMarker.position.set(x, y, z);
+        }
+
+        // Create anti-solar point marker sprite
+        function createAntiSolarMarkerSprite() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const size = 96;
+            canvas.width = size;
+            canvas.height = size;
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const markerRadius = size / 4;
+
+            // Clear with transparent background
+            context.clearRect(0, 0, size, size);
+
+            // Draw subtle glow
+            const gradient = context.createRadialGradient(
+                centerX, centerY, markerRadius * 0.3,
+                centerX, centerY, size / 2
+            );
+            gradient.addColorStop(0, 'rgba(135, 206, 235, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(135, 206, 235, 0.15)');
+            gradient.addColorStop(1, 'rgba(135, 206, 235, 0)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
+            context.fillStyle = gradient;
+            context.fill();
+
+            // Draw anti-solar marker (hollow circle with crosshairs)
+            context.strokeStyle = 'rgba(135, 206, 235, 0.6)';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.arc(centerX, centerY, markerRadius, 0, Math.PI * 2);
+            context.stroke();
+
+            // Inner dot
+            context.beginPath();
+            context.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            context.fillStyle = 'rgba(135, 206, 235, 0.8)';
+            context.fill();
+
+            // Create sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(40, 40, 1);
+
+            return sprite;
+        }
+
+        // Create rainbow ring around anti-solar point
+        // Primary rainbow appears at ~42° from the anti-solar point
+        // Creates a filled gradient band using a mesh with vertex colors
+        function createRainbowRing() {
+            const SPHERE_RADIUS = 500;
+            const RAINBOW_ANGLE = 42; // Primary rainbow at 42° from anti-solar point
+            const RAINBOW_WIDTH = 2.5; // Width of rainbow band in degrees
+            const group = new THREE.Group();
+
+            // Rainbow colors (inner to outer): violet, indigo, blue, green, yellow, orange, red
+            const rainbowColors = [
+                new THREE.Color(0x9400D3), // Violet (inner)
+                new THREE.Color(0x4B0082), // Indigo
+                new THREE.Color(0x0000FF), // Blue
+                new THREE.Color(0x00FFFF), // Cyan
+                new THREE.Color(0x00FF00), // Green
+                new THREE.Color(0xFFFF00), // Yellow
+                new THREE.Color(0xFF7F00), // Orange
+                new THREE.Color(0xFF0000)  // Red (outer)
+            ];
+
+            const segments = 128; // Around the circle
+            const rings = rainbowColors.length; // Color bands
+
+            const positions = [];
+            const colors = [];
+            const indices = [];
+
+            // Create vertices for each ring
+            for (let r = 0; r < rings; r++) {
+                const t = r / (rings - 1); // 0 to 1
+                const angle = RAINBOW_ANGLE - RAINBOW_WIDTH + (t * RAINBOW_WIDTH * 2);
+                const color = rainbowColors[r];
+
+                for (let i = 0; i <= segments; i++) {
+                    const phi = (i / segments) * Math.PI * 2;
+
+                    // Calculate position on sphere at this angle from center
+                    const rad = SPHERE_RADIUS * Math.sin(degToRad(angle));
+                    const y = SPHERE_RADIUS * Math.cos(degToRad(angle));
+
+                    positions.push(
+                        Math.cos(phi) * rad,
+                        y,
+                        Math.sin(phi) * rad
+                    );
+
+                    colors.push(color.r, color.g, color.b);
+                }
+            }
+
+            // Create triangle indices to connect the rings
+            for (let r = 0; r < rings - 1; r++) {
+                for (let i = 0; i < segments; i++) {
+                    const current = r * (segments + 1) + i;
+                    const next = current + segments + 1;
+
+                    // Two triangles per quad
+                    indices.push(current, next, current + 1);
+                    indices.push(current + 1, next, next + 1);
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.setIndex(indices);
+
+            const material = new THREE.MeshBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            group.add(mesh);
+
+            // Add a subtle outer glow line
+            const outerAngle = RAINBOW_ANGLE + RAINBOW_WIDTH + 0.5;
+            const glowGeometry = new THREE.BufferGeometry();
+            const glowPositions = [];
+            for (let i = 0; i <= segments; i++) {
+                const phi = (i / segments) * Math.PI * 2;
+                const rad = SPHERE_RADIUS * Math.sin(degToRad(outerAngle));
+                const y = SPHERE_RADIUS * Math.cos(degToRad(outerAngle));
+                glowPositions.push(Math.cos(phi) * rad, y, Math.sin(phi) * rad);
+            }
+            glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(glowPositions, 3));
+            const glowMaterial = new THREE.LineBasicMaterial({
+                color: 0xFF6666,
+                transparent: true,
+                opacity: 0.1,
+                depthTest: false,
+                depthWrite: false
+            });
+            const glowLine = new THREE.Line(glowGeometry, glowMaterial);
+            group.add(glowLine);
+
+            return group;
+        }
+
+        // Update anti-solar marker and rainbow ring position
+        // Compass offset is applied to the entire gridGroup rotation, not individual markers
+        function updateAntiSolarMarkerPosition() {
+            if (!gridGroup) return;
+
+            const gps = getCurrentGPS();
+            const hasGPS = gps.lat !== null && gps.lon !== null;
+
+            // Update anti-solar marker
+            if (antiSolarMarker) {
+                if (!hasGPS) {
+                    antiSolarMarker.visible = false;
+                } else {
+                    antiSolarMarker.visible = true;
+
+                    const SPHERE_RADIUS = 500;
+                    const azRad = degToRad(antiSolarAzimuthDeg);
+                    const altRad = degToRad(antiSolarAltitudeDeg);
+
+                    const r = SPHERE_RADIUS * Math.cos(altRad);
+                    const y = SPHERE_RADIUS * Math.sin(altRad);
+                    const x = Math.sin(azRad) * r;
+                    const z = -Math.cos(azRad) * r;
+
+                    antiSolarMarker.position.set(x, y, z);
+                }
+            }
+
+            // Update rainbow ring orientation
+            if (rainbowRing) {
+                if (!hasGPS) {
+                    rainbowRing.visible = false;
+                } else {
+                    rainbowRing.visible = true;
+
+                    // Reset rotation
+                    rainbowRing.rotation.set(0, 0, 0);
+
+                    // The rainbow ring is created centered around the +Y axis (pointing up)
+                    // We need to rotate it to point toward the anti-solar point
+
+                    // Convert anti-solar azimuth and altitude to direction vector
+                    const azRad = degToRad(antiSolarAzimuthDeg);
+                    const altRad = degToRad(antiSolarAltitudeDeg);
+
+                    // Direction to anti-solar point
+                    const dirX = Math.sin(azRad) * Math.cos(altRad);
+                    const dirY = Math.sin(altRad);
+                    const dirZ = -Math.cos(azRad) * Math.cos(altRad);
+
+                    // Create rotation to align +Y axis with anti-solar direction
+                    const upVector = new THREE.Vector3(0, 1, 0);
+                    const targetVector = new THREE.Vector3(dirX, dirY, dirZ).normalize();
+                    const quaternion = new THREE.Quaternion();
+                    quaternion.setFromUnitVectors(upVector, targetVector);
+
+                    rainbowRing.quaternion.copy(quaternion);
+                }
+            }
         }
 
         // Create the celestial grid
@@ -917,19 +1550,32 @@
                 const line = new THREE.Line(geometry, material);
                 gridGroup.add(line);
 
-                // Add altitude label on the east side (90 degrees azimuth)
+                // Add altitude labels on multiple sides for better visibility
                 if (alt !== 0) {
-                    const labelAngle = degToRad(90); // East side
-                    const labelX = Math.sin(labelAngle) * circleRadius * 0.98;
-                    const labelZ = -Math.cos(labelAngle) * circleRadius * 0.98;
+                    // Labels at East (90°), West (270°), North (0°), South (180°)
+                    const labelPositions = [
+                        { az: 90, primary: true },   // East (primary)
+                        { az: 270, primary: true },  // West (primary)
+                        { az: 0, primary: false },   // North (secondary)
+                        { az: 180, primary: false }  // South (secondary)
+                    ];
 
-                    const label = createTextSprite(
-                        `${alt > 0 ? '+' : ''}${alt}°`,
-                        alt > 0 ? 'rgba(200, 220, 255, 0.8)' : 'rgba(255, 200, 180, 0.7)',
-                        36
-                    );
-                    label.position.set(labelX, y, labelZ);
-                    gridGroup.add(label);
+                    labelPositions.forEach(pos => {
+                        const labelAngle = degToRad(pos.az);
+                        const labelX = Math.sin(labelAngle) * circleRadius * 0.98;
+                        const labelZ = -Math.cos(labelAngle) * circleRadius * 0.98;
+
+                        const label = createTextSprite(
+                            `${alt > 0 ? '+' : ''}${alt}°`,
+                            alt > 0
+                                ? (pos.primary ? 'rgba(200, 220, 255, 0.8)' : 'rgba(200, 220, 255, 0.5)')
+                                : (pos.primary ? 'rgba(255, 200, 180, 0.7)' : 'rgba(255, 200, 180, 0.45)'),
+                            pos.primary ? 36 : 28
+                        );
+                        label.position.set(labelX, y, labelZ);
+                        label.scale.set(pos.primary ? 40 : 30, pos.primary ? 20 : 15, 1);
+                        gridGroup.add(label);
+                    });
                 }
             });
 
@@ -1048,6 +1694,24 @@
                         gridGroup.add(degLabel);
                     }
                 }
+
+                // Add degree labels for ALL azimuth lines (every 15°)
+                // This adds more degree labels on the grid bars
+                if (!config.cardinal) {
+                    const labelRadius = SPHERE_RADIUS * 0.95;
+                    const degLabel = createTextSprite(
+                        `${config.az}°`,
+                        'rgba(150, 150, 150, 0.5)',
+                        26
+                    );
+                    degLabel.position.set(
+                        Math.sin(azRad) * labelRadius,
+                        -25,
+                        -Math.cos(azRad) * labelRadius
+                    );
+                    degLabel.scale.set(25, 12.5, 1);
+                    gridGroup.add(degLabel);
+                }
             });
 
             gridScene.add(gridGroup);
@@ -1055,6 +1719,14 @@
             // Create and add sun marker to the grid
             sunMarker = createSunMarkerSprite();
             gridGroup.add(sunMarker);
+
+            // Create and add anti-solar marker
+            antiSolarMarker = createAntiSolarMarkerSprite();
+            gridGroup.add(antiSolarMarker);
+
+            // Create and add rainbow ring around anti-solar point
+            rainbowRing = createRainbowRing();
+            gridGroup.add(rainbowRing);
         }
 
         // Update and render the grid
@@ -1286,6 +1958,12 @@
                 // Initialize datetime picker
                 initDateTimePicker();
 
+                // Initialize time scrubber
+                initTimeScrubber();
+
+                // Initialize compass offset control
+                initCompassOffset();
+
                 // Hide start screen and show UI elements
                 startScreen.classList.add('hidden');
                 debugOverlay.style.display = 'block';
@@ -1360,6 +2038,171 @@
             // Recalculate sun position for new time
             calculateSunPosition();
         });
+
+        // Time scrubber touch/mouse events
+        function initTimeScrubber() {
+            let scrubStartX = 0;
+            let scrubStartTime = null;
+            let isScrubbing = false;
+
+            function startScrub(clientX) {
+                isScrubbing = true;
+                scrubStartX = clientX;
+                scrubStartTime = new Date(selectedDateTime.getTime());
+                timeScrubber.classList.add('active');
+            }
+
+            function moveScrub(clientX) {
+                if (!isScrubbing) return;
+
+                const deltaX = clientX - scrubStartX;
+                // 100 pixels = 1 hour, adjust sensitivity as needed
+                const minutesDelta = Math.round(deltaX / 2); // 2 pixels per minute
+
+                const newTime = new Date(scrubStartTime.getTime() + minutesDelta * 60000);
+                selectedDateTime = newTime;
+
+                // Update the datetime picker display
+                updateDateTimePickerDisplay();
+
+                // Update scrub label to show relative change
+                const hours = Math.floor(Math.abs(minutesDelta) / 60);
+                const mins = Math.abs(minutesDelta) % 60;
+                const sign = minutesDelta >= 0 ? '+' : '-';
+                if (Math.abs(minutesDelta) > 0) {
+                    if (hours > 0) {
+                        scrubLabel.textContent = `${sign}${hours}h ${mins}m`;
+                    } else {
+                        scrubLabel.textContent = `${sign}${mins}m`;
+                    }
+                } else {
+                    scrubLabel.textContent = 'Swipe to scrub';
+                }
+
+                // Recalculate sun position
+                calculateSunPosition();
+            }
+
+            function endScrub() {
+                if (!isScrubbing) return;
+                isScrubbing = false;
+                timeScrubber.classList.remove('active');
+                scrubLabel.textContent = 'Swipe to scrub';
+            }
+
+            // Touch events
+            timeScrubber.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startScrub(e.touches[0].clientX);
+            }, { passive: false });
+
+            timeScrubber.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                moveScrub(e.touches[0].clientX);
+            }, { passive: false });
+
+            timeScrubber.addEventListener('touchend', endScrub);
+            timeScrubber.addEventListener('touchcancel', endScrub);
+
+            // Mouse events for desktop testing
+            timeScrubber.addEventListener('mousedown', (e) => {
+                startScrub(e.clientX);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                moveScrub(e.clientX);
+            });
+
+            document.addEventListener('mouseup', endScrub);
+        }
+
+        // Update datetime picker display from selectedDateTime
+        function updateDateTimePickerDisplay() {
+            const year = selectedDateTime.getFullYear();
+            const month = String(selectedDateTime.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDateTime.getDate()).padStart(2, '0');
+            const hours = String(selectedDateTime.getHours()).padStart(2, '0');
+            const minutes = String(selectedDateTime.getMinutes()).padStart(2, '0');
+            datetimePicker.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // Initialize compass offset control
+        function initCompassOffset() {
+            let isDragging = false;
+            let startX = 0;
+            let startOffset = 0;
+            const maxOffset = 30; // ±30 degrees max offset
+
+            function updateThumbPosition() {
+                const percent = ((compassOffset + maxOffset) / (maxOffset * 2)) * 100;
+                compassOffsetThumb.style.left = `${percent}%`;
+                compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
+            }
+
+            function startDrag(clientX) {
+                isDragging = true;
+                startX = clientX;
+                startOffset = compassOffset;
+            }
+
+            function moveDrag(clientX) {
+                if (!isDragging) return;
+
+                const rect = compassOffsetSlider.getBoundingClientRect();
+                const sliderWidth = rect.width;
+                const relativeX = clientX - rect.left;
+                const percent = Math.max(0, Math.min(1, relativeX / sliderWidth));
+                compassOffset = Math.round((percent * maxOffset * 2) - maxOffset);
+
+                updateThumbPosition();
+
+                // Apply compass offset to entire grid coordinate system
+                applyCompassOffset();
+            }
+
+            function endDrag() {
+                isDragging = false;
+            }
+
+            // Touch events
+            compassOffsetSlider.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                moveDrag(touch.clientX); // Jump to touch position
+                startDrag(touch.clientX);
+            }, { passive: false });
+
+            compassOffsetSlider.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                moveDrag(e.touches[0].clientX);
+            }, { passive: false });
+
+            compassOffsetSlider.addEventListener('touchend', endDrag);
+            compassOffsetSlider.addEventListener('touchcancel', endDrag);
+
+            // Mouse events
+            compassOffsetSlider.addEventListener('mousedown', (e) => {
+                moveDrag(e.clientX);
+                startDrag(e.clientX);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                moveDrag(e.clientX);
+            });
+
+            document.addEventListener('mouseup', endDrag);
+
+            // Reset button
+            compassOffsetReset.addEventListener('click', (e) => {
+                e.stopPropagation();
+                compassOffset = 0;
+                updateThumbPosition();
+                applyCompassOffset();
+            });
+
+            // Initialize thumb position
+            updateThumbPosition();
+        }
 
         // Open GPS modal
         gpsEditBtn.addEventListener('click', () => {
