@@ -45,6 +45,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center center;
+        }
+
+        #camera-feed.zoomed {
+            transform: scale(5);
         }
 
         #horizon-canvas {
@@ -78,6 +84,16 @@
             align-items: center;
             z-index: 100;
             overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         #start-screen::before {
@@ -114,7 +130,18 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: rainbow-shift 8s ease infinite;
+            animation: rainbow-shift 8s ease infinite, fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         @keyframes rainbow-shift {
@@ -129,6 +156,7 @@
             text-align: center;
             letter-spacing: 2px;
             text-transform: uppercase;
+            animation: fadeIn 0.8s ease-out 0.2s both;
         }
 
         #author-credit {
@@ -151,15 +179,37 @@
             border-radius: 18px;
             cursor: pointer;
             touch-action: manipulation;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: pulse 2s ease-in-out infinite, slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(0, 122, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         #start-btn:active {
             background: linear-gradient(135deg, rgba(0, 86, 179, 0.95) 0%, rgba(0, 60, 140, 0.95) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+            transition: all 0.1s ease;
         }
 
         #start-btn:disabled {
@@ -213,6 +263,18 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             min-width: 160px;
             overflow: hidden;
+            animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         #debug-overlay .panel-header {
@@ -241,7 +303,7 @@
         #debug-overlay .panel-toggle {
             color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .panel-toggle.collapsed {
@@ -252,7 +314,7 @@
             padding: 12px 14px;
             max-height: 600px;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         }
 
         #debug-overlay .panel-content.collapsed {
@@ -305,7 +367,7 @@
         #debug-overlay .section-toggle {
             color: rgba(255, 255, 255, 0.5);
             font-size: 10px;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .section-toggle.collapsed {
@@ -315,7 +377,7 @@
         #debug-overlay .section-content {
             overflow: hidden;
             max-height: 200px;
-            transition: max-height 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         }
 
         #debug-overlay .section-content.collapsed {
@@ -337,6 +399,22 @@
             color: #00ff00;
             text-align: right;
             min-width: 80px;
+            transition: all 0.3s ease;
+        }
+
+        #debug-overlay .value.updated {
+            animation: valuePulse 0.5s ease;
+        }
+
+        @keyframes valuePulse {
+            0%, 100% {
+                transform: scale(1);
+                color: #00ff00;
+            }
+            50% {
+                transform: scale(1.1);
+                color: #00ff88;
+            }
         }
 
         /* Inline compass offset control in debug panel */
@@ -408,6 +486,19 @@
             display: none !important;
         }
 
+        #start-screen.fading-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
         /* Date/Time Picker */
         #datetime-container {
             position: fixed;
@@ -417,6 +508,18 @@
             z-index: 50;
             display: none;
             padding-bottom: 10px;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         .datetime-wrapper {
@@ -464,6 +567,16 @@
         .datetime-wrapper.scrubbing {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
             border-color: rgba(255, 255, 255, 0.3);
+            animation: scrubPulse 0.6s ease-in-out infinite;
+        }
+
+        @keyframes scrubPulse {
+            0%, 100% {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            }
         }
 
         .datetime-wrapper.scrubbing .scrub-arrow {
@@ -494,8 +607,13 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
+        #info-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         #info-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
+            transform: scale(0.9);
         }
 
         /* Info Modal */
@@ -512,10 +630,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #info-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #info-modal-content {
@@ -528,6 +649,23 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-modal.visible #info-modal-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         #info-modal h3 {
@@ -557,6 +695,12 @@
             font-size: 14px;
             cursor: pointer;
             margin-top: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-modal .info-close:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         /* Compass offset input modal */
@@ -573,10 +717,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #offset-input-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #offset-input-content {
@@ -588,6 +735,12 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #offset-input-modal.visible #offset-input-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #offset-input-content label {
@@ -629,6 +782,11 @@
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .offset-input-btn:active {
+            transform: scale(0.95);
         }
 
         #offset-apply-btn {
@@ -677,7 +835,8 @@
 
         #gps-edit-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+            transition: all 0.1s ease;
         }
 
         /* GPS Modal */
@@ -694,10 +853,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #gps-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #gps-modal-content {
@@ -710,6 +872,12 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #gps-modal.visible #gps-modal-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #gps-modal h3 {
@@ -765,8 +933,12 @@
             transition: all 0.2s ease;
         }
 
+        .gps-modal-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .gps-modal-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
 
         #gps-apply-btn {
@@ -797,6 +969,59 @@
 
         .gps-source.manual {
             color: #FFD60A;
+        }
+
+        /* Zoom Button */
+        #zoom-btn {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 80px);
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(15, 25, 50, 0.85) 0%, rgba(10, 20, 40, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: 600;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 50;
+            display: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #zoom-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        #zoom-btn:active {
+            transform: scale(0.95);
+            transition: all 0.1s ease;
+        }
+
+        #zoom-btn.zoomed {
+            background: linear-gradient(135deg, rgba(255, 150, 0, 0.9) 0%, rgba(255, 100, 0, 0.85) 100%);
+            box-shadow: 0 8px 24px rgba(255, 150, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        #zoom-btn.zoomed:hover {
+            box-shadow: 0 12px 32px rgba(255, 150, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -887,6 +1112,24 @@
                 </div>
             </div>
 
+            <!-- Moon Section -->
+            <div class="section" data-section="moon">
+                <div class="section-header" onclick="toggleSection('moon'); event.stopPropagation();">
+                    <span class="section-title">Moon Position</span>
+                    <span class="section-toggle" id="toggle-moon">▼</span>
+                </div>
+                <div class="section-content" id="content-moon">
+                    <div class="row">
+                        <span class="label">MOON AZ</span>
+                        <span class="value" id="moon-azimuth" style="color: #E6E6FA;">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">MOON ALT</span>
+                        <span class="value" id="moon-altitude" style="color: #E6E6FA;">--°</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Anti-solar Section -->
             <div class="section" data-section="antisolar">
                 <div class="section-header" onclick="toggleSection('antisolar'); event.stopPropagation();">
@@ -932,6 +1175,7 @@
 
     <button id="gps-edit-btn">Edit GPS</button>
     <button id="info-btn">i</button>
+    <button id="zoom-btn">5x</button>
 
     <div id="datetime-container">
         <div class="datetime-wrapper" id="datetime-wrapper">
@@ -1033,6 +1277,8 @@
         const gpsSourceEl = document.getElementById('gps-source');
         const sunAzimuthEl = document.getElementById('sun-azimuth');
         const sunAltitudeEl = document.getElementById('sun-altitude');
+        const moonAzimuthEl = document.getElementById('moon-azimuth');
+        const moonAltitudeEl = document.getElementById('moon-altitude');
         const antisolarAzimuthEl = document.getElementById('antisolar-azimuth');
         const antisolarAltitudeEl = document.getElementById('antisolar-altitude');
 
@@ -1054,6 +1300,9 @@
         const infoBtn = document.getElementById('info-btn');
         const infoModal = document.getElementById('info-modal');
         const infoClose = document.getElementById('info-close');
+
+        // Zoom button
+        const zoomBtn = document.getElementById('zoom-btn');
 
         // Offset input modal
         const offsetInputModal = document.getElementById('offset-input-modal');
@@ -1087,6 +1336,7 @@
             location: true,
             orientation: true,
             sun: true,
+            moon: true,
             antisolar: true,
             compass: true
         };
@@ -1102,6 +1352,7 @@
         let gridCamera = null;
         let gridGroup = null;
         let sunMarker = null;  // Three.js sun marker sprite
+        let moonMarker = null;  // Three.js moon marker sprite
         let antiSolarMarker = null;  // Anti-solar point marker
         let rainbowRing = null;  // Rainbow ring around anti-solar point
 
@@ -1116,6 +1367,15 @@
         // Calculated for typical iPhone (26mm equivalent lens in portrait mode):
         // VFOV = 2 * atan(36 / (2 * 26)) ≈ 69°
         const VERTICAL_FOV = 69;
+        const ZOOM_LEVEL = 5; // 5x zoom multiplier
+        let isZoomed = false;
+        let targetFOV = VERTICAL_FOV; // Target FOV for smooth transitions
+        let currentFOV = VERTICAL_FOV; // Current FOV (smoothly interpolated)
+        const FOV_SMOOTHING = 0.15; // FOV transition smoothing (lower = smoother)
+        
+        // Smoothed quaternion for zoom mode
+        let smoothedQuaternion = new THREE.Quaternion();
+        const QUATERNION_SMOOTHING = 0.2; // Quaternion smoothing in zoom mode (0-1, lower = smoother)
 
         // Current orientation values (radians) for horizon drawing
         let currentPitchRad = 0;
@@ -1139,6 +1399,10 @@
         // Sun position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
         let sunAzimuthDeg = 0;
         let sunAltitudeDeg = 0;
+
+        // Moon position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
+        let moonAzimuthDeg = 0;
+        let moonAltitudeDeg = 0;
 
         // Anti-solar point position (opposite of sun)
         let antiSolarAzimuthDeg = 0;
@@ -1227,13 +1491,33 @@
         // Update GPS display based on current mode
         function updateGPSDisplay() {
             if (useManualGPS && manualLat !== null && manualLon !== null) {
-                latEl.textContent = manualLat.toFixed(2) + '°';
-                lonEl.textContent = manualLon.toFixed(2) + '°';
+                const latText = manualLat.toFixed(2) + '°';
+                const lonText = manualLon.toFixed(2) + '°';
+                if (latEl.textContent !== latText) {
+                    latEl.classList.add('updated');
+                    setTimeout(() => latEl.classList.remove('updated'), 500);
+                }
+                if (lonEl.textContent !== lonText) {
+                    lonEl.classList.add('updated');
+                    setTimeout(() => lonEl.classList.remove('updated'), 500);
+                }
+                latEl.textContent = latText;
+                lonEl.textContent = lonText;
                 gpsSourceEl.textContent = 'Manual GPS';
                 gpsSourceEl.classList.add('manual');
             } else if (deviceLat !== null && deviceLon !== null) {
-                latEl.textContent = deviceLat.toFixed(2) + '°';
-                lonEl.textContent = deviceLon.toFixed(2) + '°';
+                const latText = deviceLat.toFixed(2) + '°';
+                const lonText = deviceLon.toFixed(2) + '°';
+                if (latEl.textContent !== latText) {
+                    latEl.classList.add('updated');
+                    setTimeout(() => latEl.classList.remove('updated'), 500);
+                }
+                if (lonEl.textContent !== lonText) {
+                    lonEl.classList.add('updated');
+                    setTimeout(() => lonEl.classList.remove('updated'), 500);
+                }
+                latEl.textContent = latText;
+                lonEl.textContent = lonText;
                 gpsSourceEl.textContent = 'Device GPS';
                 gpsSourceEl.classList.remove('manual');
             }
@@ -1363,11 +1647,33 @@
             antiSolarAzimuthDeg = normalizeAngle(sunAzimuthDeg + 180);
             antiSolarAltitudeDeg = -sunAltitudeDeg;
 
-            // Update debug display
-            sunAzimuthEl.textContent = Math.round(sunAzimuthDeg) + '°';
-            sunAltitudeEl.textContent = Math.round(sunAltitudeDeg) + '°';
-            antisolarAzimuthEl.textContent = Math.round(antiSolarAzimuthDeg) + '°';
-            antisolarAltitudeEl.textContent = Math.round(antiSolarAltitudeDeg) + '°';
+            // Update debug display with animation
+            const sunAzText = Math.round(sunAzimuthDeg) + '°';
+            const sunAltText = Math.round(sunAltitudeDeg) + '°';
+            const asAzText = Math.round(antiSolarAzimuthDeg) + '°';
+            const asAltText = Math.round(antiSolarAltitudeDeg) + '°';
+            
+            if (sunAzimuthEl.textContent !== sunAzText) {
+                sunAzimuthEl.classList.add('updated');
+                setTimeout(() => sunAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (sunAltitudeEl.textContent !== sunAltText) {
+                sunAltitudeEl.classList.add('updated');
+                setTimeout(() => sunAltitudeEl.classList.remove('updated'), 500);
+            }
+            if (antisolarAzimuthEl.textContent !== asAzText) {
+                antisolarAzimuthEl.classList.add('updated');
+                setTimeout(() => antisolarAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (antisolarAltitudeEl.textContent !== asAltText) {
+                antisolarAltitudeEl.classList.add('updated');
+                setTimeout(() => antisolarAltitudeEl.classList.remove('updated'), 500);
+            }
+            
+            sunAzimuthEl.textContent = sunAzText;
+            sunAltitudeEl.textContent = sunAltText;
+            antisolarAzimuthEl.textContent = asAzText;
+            antisolarAltitudeEl.textContent = asAltText;
 
             // Update the Three.js sun marker position
             updateSunMarkerPosition();
@@ -1408,8 +1714,13 @@
             gridScene = new THREE.Scene();
 
             // Create camera with matching FOV
-            gridCamera = new THREE.PerspectiveCamera(VERTICAL_FOV, aspectRatio, 0.1, 2000);
+            targetFOV = VERTICAL_FOV;
+            currentFOV = VERTICAL_FOV;
+            gridCamera = new THREE.PerspectiveCamera(currentFOV, aspectRatio, 0.1, 2000);
             gridCamera.position.set(0, 0, 0);
+            
+            // Initialize smoothed quaternion
+            smoothedQuaternion = new THREE.Quaternion();
 
             // Create renderer with transparent background
             gridRenderer = new THREE.WebGLRenderer({
@@ -1559,6 +1870,216 @@
             const z = -Math.cos(azRad) * r;
 
             sunMarker.position.set(x, y, z);
+        }
+
+        // Calculate moon position using SunCalc
+        function calculateMoonPosition() {
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                moonAzimuthEl.textContent = '--°';
+                moonAltitudeEl.textContent = '--°';
+                updateMoonMarkerPosition();  // Hide moon marker when no GPS
+                return;
+            }
+
+            // Get moon position from SunCalc
+            // Note: SunCalc returns azimuth in radians, measured from SOUTH, clockwise
+            // We need to convert to degrees from NORTH (0-360)
+            const moonPos = SunCalc.getMoonPosition(selectedDateTime, gps.lat, gps.lon);
+
+            // Convert altitude from radians to degrees
+            moonAltitudeDeg = radToDeg(moonPos.altitude);
+
+            // Convert azimuth from radians (from south) to degrees (from north)
+            // SunCalc azimuth: 0 = south, positive = westward
+            // We want: 0 = north, positive = eastward (clockwise)
+            // Conversion: add 180° to flip from south to north reference
+            moonAzimuthDeg = normalizeAngle(radToDeg(moonPos.azimuth) + 180);
+
+            // Update debug display with animation
+            const moonAzText = Math.round(moonAzimuthDeg) + '°';
+            const moonAltText = Math.round(moonAltitudeDeg) + '°';
+            
+            if (moonAzimuthEl.textContent !== moonAzText) {
+                moonAzimuthEl.classList.add('updated');
+                setTimeout(() => moonAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (moonAltitudeEl.textContent !== moonAltText) {
+                moonAltitudeEl.classList.add('updated');
+                setTimeout(() => moonAltitudeEl.classList.remove('updated'), 500);
+            }
+            
+            moonAzimuthEl.textContent = moonAzText;
+            moonAltitudeEl.textContent = moonAltText;
+
+            // Update the Three.js moon marker position
+            updateMoonMarkerPosition();
+        }
+
+        // Create moon marker sprite for Three.js scene
+        function createMoonMarkerSprite() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const size = 128;
+            canvas.width = size;
+            canvas.height = size;
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const glowRadius = size / 2;
+            const moonRadius = size / 3.5;
+
+            // Clear with transparent background
+            context.clearRect(0, 0, size, size);
+
+            // Get moon phase for styling
+            const moonIllumination = SunCalc.getMoonIllumination(selectedDateTime);
+            const phase = moonIllumination.phase; // 0 = new moon, 0.5 = full moon, 1 = new moon again
+
+            // Draw moon glow (outer) - softer, more ethereal than sun
+            const glowGradient = context.createRadialGradient(
+                centerX, centerY, moonRadius * 0.3,
+                centerX, centerY, glowRadius
+            );
+            glowGradient.addColorStop(0, 'rgba(230, 230, 250, 0.5)');
+            glowGradient.addColorStop(0.4, 'rgba(200, 200, 255, 0.3)');
+            glowGradient.addColorStop(0.7, 'rgba(180, 180, 240, 0.15)');
+            glowGradient.addColorStop(1, 'rgba(150, 150, 220, 0)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+            context.fillStyle = glowGradient;
+            context.fill();
+
+            // Draw moon circle (main marker) with phase
+            if (phase < 0.25 || phase > 0.75) {
+                // New moon to crescent or waning crescent - draw crescent shape
+                const crescentOffset = (phase < 0.25) ? 
+                    (0.25 - phase) * 2 : // Waxing crescent
+                    (phase - 0.75) * 2;  // Waning crescent
+                
+                // Draw main moon circle
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(220, 220, 240, 0.95)';
+                context.fill();
+
+                // Draw shadow to create crescent effect
+                const shadowOffset = moonRadius * 0.7 * crescentOffset;
+                context.beginPath();
+                context.arc(centerX - shadowOffset, centerY, moonRadius * 1.1, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(30, 30, 50, 0.9)';
+                context.fill();
+            } else if (phase < 0.35 || phase > 0.65) {
+                // Gibbous phase - mostly full with slight shadow
+                const shadowAmount = (phase < 0.5) ? 
+                    (phase - 0.25) * 2 : // Waxing gibbous
+                    (0.75 - phase) * 2;  // Waning gibbous
+                
+                // Draw main moon circle
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(230, 230, 250, 0.95)';
+                context.fill();
+
+                // Draw subtle shadow
+                const shadowOffset = moonRadius * 0.4 * (1 - shadowAmount);
+                context.beginPath();
+                context.arc(centerX - shadowOffset, centerY, moonRadius * 1.05, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(50, 50, 80, 0.6)';
+                context.fill();
+            } else {
+                // Full moon or near-full - draw full circle with subtle glow
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                const fullMoonGradient = context.createRadialGradient(
+                    centerX, centerY, moonRadius * 0.3,
+                    centerX, centerY, moonRadius
+                );
+                fullMoonGradient.addColorStop(0, 'rgba(250, 250, 255, 0.98)');
+                fullMoonGradient.addColorStop(0.7, 'rgba(230, 230, 250, 0.95)');
+                fullMoonGradient.addColorStop(1, 'rgba(210, 210, 240, 0.9)');
+                context.fillStyle = fullMoonGradient;
+                context.fill();
+
+                // Add subtle craters/texture
+                context.fillStyle = 'rgba(200, 200, 230, 0.3)';
+                context.beginPath();
+                context.arc(centerX - moonRadius * 0.3, centerY - moonRadius * 0.2, moonRadius * 0.15, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(centerX + moonRadius * 0.25, centerY + moonRadius * 0.3, moonRadius * 0.12, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(centerX - moonRadius * 0.1, centerY + moonRadius * 0.15, moonRadius * 0.1, 0, Math.PI * 2);
+                context.fill();
+            }
+
+            // Draw moon outline - softer than sun
+            context.beginPath();
+            context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(200, 200, 255, 0.7)';
+            context.lineWidth = 2.5;
+            context.stroke();
+
+            // Add inner highlight for depth
+            context.beginPath();
+            context.arc(centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, moonRadius * 0.3, 0, Math.PI * 2);
+            const highlightGradient = context.createRadialGradient(
+                centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, 0,
+                centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, moonRadius * 0.3
+            );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            context.fillStyle = highlightGradient;
+            context.fill();
+
+            // Create sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(55, 55, 1); // Slightly smaller than sun
+
+            return sprite;
+        }
+
+        // Update moon marker position in the Three.js scene
+        function updateMoonMarkerPosition() {
+            if (!moonMarker || !gridGroup) return;
+
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                moonMarker.visible = false;
+                return;
+            }
+
+            moonMarker.visible = true;
+
+            // Same SPHERE_RADIUS as the grid
+            const SPHERE_RADIUS = 500;
+
+            // Convert moon azimuth and altitude to 3D position
+            // Using the same coordinate system as the grid:
+            // Azimuth: 0 = North = -Z, 90 = East = +X
+            // Altitude: angle above/below horizon
+            const azRad = degToRad(moonAzimuthDeg);
+            const altRad = degToRad(moonAltitudeDeg);
+
+            // Calculate position on the celestial sphere
+            const r = SPHERE_RADIUS * Math.cos(altRad);
+            const y = SPHERE_RADIUS * Math.sin(altRad);
+            const x = Math.sin(azRad) * r;
+            const z = -Math.cos(azRad) * r;
+
+            moonMarker.position.set(x, y, z);
         }
 
         // Create anti-solar point marker sprite
@@ -2014,6 +2535,10 @@
             sunMarker = createSunMarkerSprite();
             gridGroup.add(sunMarker);
 
+            // Create and add moon marker to the grid
+            moonMarker = createMoonMarkerSprite();
+            gridGroup.add(moonMarker);
+
             // Create and add anti-solar marker
             antiSolarMarker = createAntiSolarMarkerSprite();
             gridGroup.add(antiSolarMarker);
@@ -2027,8 +2552,32 @@
         function updateGrid() {
             if (!gridRenderer || !gridScene || !gridCamera) return;
 
-            // Copy orientation from the device orientation camera
-            gridCamera.quaternion.copy(threeCamera.quaternion);
+            // Smoothly interpolate FOV towards target
+            const fovDiff = targetFOV - currentFOV;
+            if (Math.abs(fovDiff) > 0.1) {
+                currentFOV += fovDiff * FOV_SMOOTHING;
+                gridCamera.fov = currentFOV;
+                gridCamera.updateProjectionMatrix();
+            } else {
+                currentFOV = targetFOV;
+                if (gridCamera.fov !== currentFOV) {
+                    gridCamera.fov = currentFOV;
+                    gridCamera.updateProjectionMatrix();
+                }
+            }
+
+            // Apply orientation with smoothing in zoom mode
+            if (isZoomed) {
+                // Smoothly interpolate quaternion in zoom mode to reduce jitter
+                // slerp interpolates from current quaternion towards target (alpha: 0 = no change, 1 = full target)
+                smoothedQuaternion.slerp(threeCamera.quaternion, QUATERNION_SMOOTHING);
+                gridCamera.quaternion.copy(smoothedQuaternion);
+            } else {
+                // Direct copy when not zoomed for responsiveness
+                gridCamera.quaternion.copy(threeCamera.quaternion);
+                // Keep smoothed quaternion in sync
+                smoothedQuaternion.copy(threeCamera.quaternion);
+            }
 
             // Render
             gridRenderer.render(gridScene, gridCamera);
@@ -2042,9 +2591,37 @@
             const height = window.innerHeight;
 
             gridCamera.aspect = width / height;
+            // Update target FOV (will smoothly transition)
+            targetFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
             gridCamera.updateProjectionMatrix();
 
             gridRenderer.setSize(width, height);
+        }
+
+        // Toggle zoom
+        function toggleZoom() {
+            triggerHaptic('medium');
+            isZoomed = !isZoomed;
+            
+            // Update camera feed zoom
+            if (isZoomed) {
+                videoElement.classList.add('zoomed');
+                zoomBtn.classList.add('zoomed');
+                zoomBtn.textContent = '1x';
+            } else {
+                videoElement.classList.remove('zoomed');
+                zoomBtn.classList.remove('zoomed');
+                zoomBtn.textContent = '5x';
+            }
+            
+            // Update target FOV (will smoothly animate via updateGrid)
+            if (gridCamera) {
+                targetFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+                // Reset smoothed quaternion when toggling zoom for instant alignment
+                if (threeCamera) {
+                    smoothedQuaternion.copy(threeCamera.quaternion);
+                }
+            }
         }
 
         // Convert radians to degrees
@@ -2099,22 +2676,37 @@
                     let heading = Math.atan2(direction.x, -direction.z);
                     heading = normalizeAngle(radToDeg(heading));
                     currentHeadingDeg = heading;
+                    if (headingEl.textContent !== Math.round(heading) + '° (rel)') {
+                        headingEl.classList.add('updated');
+                        setTimeout(() => headingEl.classList.remove('updated'), 500);
+                    }
                     headingEl.textContent = Math.round(heading) + '° (rel)';
                 } else {
                     // Smoothly interpolate toward target compass heading
-                    currentHeadingDeg = lerpAngle(currentHeadingDeg, targetHeadingDeg, HEADING_SMOOTHING);
+                    const newHeading = lerpAngle(currentHeadingDeg, targetHeadingDeg, HEADING_SMOOTHING);
+                    if (Math.round(newHeading) !== Math.round(currentHeadingDeg)) {
+                        headingEl.classList.add('updated');
+                        setTimeout(() => headingEl.classList.remove('updated'), 500);
+                    }
+                    currentHeadingDeg = newHeading;
                     headingEl.textContent = Math.round(currentHeadingDeg) + '°';
                 }
 
                 // Calculate sun position (uses currentHeadingDeg from compass)
                 calculateSunPosition();
+                calculateMoonPosition();
 
                 // Calculate pitch (elevation angle)
                 // direction.y gives vertical component: positive = up, negative = down
                 // asin gives angle from horizontal
                 const pitch = Math.asin(direction.y);
+                const pitchDeg = Math.round(radToDeg(pitch));
+                if (pitchEl.textContent !== pitchDeg + '°') {
+                    pitchEl.classList.add('updated');
+                    setTimeout(() => pitchEl.classList.remove('updated'), 500);
+                }
                 currentPitchRad = pitch;
-                pitchEl.textContent = Math.round(radToDeg(pitch)) + '°';
+                pitchEl.textContent = pitchDeg + '°';
 
                 // Calculate roll (rotation around viewing axis)
                 // Get the camera's up vector in world space
@@ -2138,8 +2730,13 @@
                     up.dot(right),
                     up.dot(expectedUp)
                 );
+                const rollDeg = Math.round(radToDeg(roll));
+                if (rollEl.textContent !== rollDeg + '°') {
+                    rollEl.classList.add('updated');
+                    setTimeout(() => rollEl.classList.remove('updated'), 500);
+                }
                 currentRollRad = roll;
-                rollEl.textContent = Math.round(radToDeg(roll)) + '°';
+                rollEl.textContent = rollDeg + '°';
 
                 // Update the grid overlay
                 updateGrid();
@@ -2259,12 +2856,20 @@
                 // Initialize compass offset control
                 initCompassOffset();
 
+                // Initial calculations
+                calculateSunPosition();
+                calculateMoonPosition();
+
                 // Hide start screen and show UI elements
-                startScreen.classList.add('hidden');
+                startScreen.classList.add('fading-out');
+                setTimeout(() => {
+                    startScreen.classList.add('hidden');
+                }, 500);
                 debugOverlay.style.display = 'block';
                 gpsEditBtn.style.display = 'block';
                 infoBtn.style.display = 'block';
                 datetimeContainer.style.display = 'block';
+                zoomBtn.style.display = 'block';
             } else {
                 // Camera failed - allow retry
                 startBtn.disabled = false;
@@ -2333,6 +2938,14 @@
             console.log('Selected datetime:', selectedDateTime);
             // Recalculate sun position for new time
             calculateSunPosition();
+            calculateMoonPosition();
+            // Update moon sprite to reflect new phase
+            if (moonMarker && gridGroup) {
+                gridGroup.remove(moonMarker);
+                moonMarker = createMoonMarkerSprite();
+                gridGroup.add(moonMarker);
+                updateMoonMarkerPosition();
+            }
         });
 
         // Time scrubber - swipe directly on datetime picker
@@ -2379,6 +2992,14 @@
 
                 // Recalculate sun position
                 calculateSunPosition();
+                calculateMoonPosition();
+                // Update moon sprite to reflect new phase
+                if (moonMarker && gridGroup) {
+                    gridGroup.remove(moonMarker);
+                    moonMarker = createMoonMarkerSprite();
+                    gridGroup.add(moonMarker);
+                    updateMoonMarkerPosition();
+                }
             }
 
             function endScrub() {
@@ -2571,6 +3192,7 @@
             useManualGPS = true;
             updateGPSDisplay();
             calculateSunPosition();
+            calculateMoonPosition();
             triggerHaptic('success');
             gpsModal.classList.remove('visible');
         });
@@ -2583,6 +3205,7 @@
             manualLon = null;
             updateGPSDisplay();
             calculateSunPosition();
+            calculateMoonPosition();
             gpsModal.classList.remove('visible');
         });
 
@@ -2663,6 +3286,9 @@
                 offsetInputModal.classList.remove('visible');
             }
         });
+
+        // Zoom button handler
+        zoomBtn.addEventListener('click', toggleZoom);
     </script>
 </body>
 </html>
