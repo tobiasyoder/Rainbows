@@ -498,6 +498,11 @@
         let hasCompassHeading = false;
         const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
 
+        // Device orientation angles (degrees) for quaternion-based heading calculation
+        let deviceAlpha = null;  // Rotation around Z-axis (compass direction)
+        let deviceBeta = null;   // Rotation around X-axis (front-back tilt)
+        let deviceGamma = null;  // Rotation around Y-axis (left-right tilt)
+
         // North calibration - aligns grid to true cardinal north
         // This offset is applied once when we first get a compass reading
         let isNorthCalibrated = false;
@@ -1102,6 +1107,55 @@
             return deg;
         }
 
+        // Calculate compass heading from device orientation using quaternion math
+        // This properly accounts for device tilt by projecting the forward vector onto the ground plane
+        function calculateHeadingFromOrientation(alpha, beta, gamma) {
+            if (alpha === null || beta === null || gamma === null) {
+                return null;
+            }
+
+            // Convert to radians
+            const alphaRad = degToRad(alpha);
+            const betaRad = degToRad(beta);
+            const gammaRad = degToRad(gamma);
+
+            // Create quaternion from device orientation (ZXY Euler order, as used by DeviceOrientationControls)
+            // This matches the standard W3C DeviceOrientation spec interpretation
+            const quaternion = new THREE.Quaternion();
+
+            // Build rotation from Euler angles in ZXY order
+            const euler = new THREE.Euler(betaRad, alphaRad, -gammaRad, 'YXZ');
+            quaternion.setFromEuler(euler);
+
+            // Apply screen orientation correction (assuming portrait mode)
+            // Rotate -90 degrees around Z to align with standard coordinate system
+            const screenAdjust = new THREE.Quaternion();
+            screenAdjust.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+            quaternion.multiply(screenAdjust);
+
+            // Create forward vector (looking down -Z axis in device space)
+            const forward = new THREE.Vector3(0, 0, -1);
+
+            // Rotate forward vector by device orientation quaternion
+            forward.applyQuaternion(quaternion);
+
+            // Project onto ground plane (set y = 0) to get horizontal direction
+            forward.y = 0;
+
+            // Handle edge case when looking straight up or down
+            if (forward.length() < 0.001) {
+                return null;
+            }
+
+            forward.normalize();
+
+            // Calculate angle relative to North (-Z direction)
+            // atan2(x, -z) gives angle from North, clockwise positive
+            const heading = Math.atan2(forward.x, -forward.z);
+
+            return normalizeAngle(radToDeg(heading));
+        }
+
         // Calculate correct horizontal FOV from vertical FOV and aspect ratio
         // Formula: hFOV = 2 * atan(aspectRatio * tan(vFOV/2))
         function calculateHorizontalFOV(verticalFOV, aspectRatio) {
@@ -1130,27 +1184,33 @@
                 threeCamera.getWorldDirection(direction);
 
                 // NORTH CALIBRATION: Align grid to true cardinal north
-                // This runs once when we first get a compass heading
-                // It calculates the offset between Three.js reference frame and true north,
-                // then applies this as a Y-axis rotation to the grid
-                if (hasCompassHeading && !isNorthCalibrated && gridGroup) {
-                    // Get the Three.js relative heading (arbitrary reference frame)
-                    const threeJSHeading = normalizeAngle(radToDeg(Math.atan2(direction.x, -direction.z)));
+                // This runs once when we have device orientation data
+                // Uses quaternion math to calculate heading from alpha/beta/gamma,
+                // properly accounting for device tilt by projecting onto the ground plane
+                if (hasCompassHeading && !isNorthCalibrated && gridGroup && deviceAlpha !== null) {
+                    // Calculate compass heading using quaternion-based projection
+                    // This creates a quaternion from alpha/beta/gamma, rotates a forward vector,
+                    // projects onto the ground plane, and calculates the angle from North
+                    const quaternionHeading = calculateHeadingFromOrientation(deviceAlpha, deviceBeta, deviceGamma);
 
-                    // Calculate offset: how much to rotate grid so North aligns with true north
-                    // If compass says we're facing 90° (East), and Three.js says camera is at 0°,
-                    // we need to rotate the grid by 90° so that when camera looks at 0°,
-                    // the grid shows East (90°), not North (0°)
-                    const northOffset = normalizeAngle(targetHeadingDeg - threeJSHeading);
+                    if (quaternionHeading !== null) {
+                        // Get the Three.js relative heading (arbitrary reference frame)
+                        const threeJSHeading = normalizeAngle(radToDeg(Math.atan2(direction.x, -direction.z)));
 
-                    // Apply the offset as Y-axis rotation to the grid group
-                    // This rotates the entire celestial grid (including sun marker) to align with true north
-                    gridGroup.rotation.y = degToRad(northOffset);
+                        // Calculate offset: difference between quaternion-derived heading and Three.js heading
+                        // This accounts for the arbitrary reference frame of DeviceOrientationControls
+                        const northOffset = normalizeAngle(quaternionHeading - threeJSHeading);
 
-                    isNorthCalibrated = true;
-                    console.log('North calibrated. Three.js heading:', threeJSHeading.toFixed(1),
-                                '°, Compass heading:', targetHeadingDeg.toFixed(1),
-                                '°, Offset applied:', northOffset.toFixed(1), '°');
+                        // Apply the offset as Y-axis rotation to the grid group
+                        // This rotates the entire celestial grid (including sun marker) to align with true north
+                        gridGroup.rotation.y = degToRad(northOffset);
+
+                        isNorthCalibrated = true;
+                        console.log('North calibrated using quaternion projection.',
+                                    'Quaternion heading:', quaternionHeading.toFixed(1), '°,',
+                                    'Three.js heading:', threeJSHeading.toFixed(1), '°,',
+                                    'Offset applied:', northOffset.toFixed(1), '°');
+                    }
                 }
 
                 // Calculate heading (compass direction)
@@ -1257,6 +1317,13 @@
         // Handle compass heading from device orientation events
         // This provides TRUE compass heading (relative to magnetic/true north)
         function handleCompassHeading(event) {
+            // Always store alpha, beta, gamma for quaternion-based calculations
+            if (event.alpha !== null) {
+                deviceAlpha = event.alpha;
+                deviceBeta = event.beta;
+                deviceGamma = event.gamma;
+            }
+
             // iOS provides webkitCompassHeading (0-360, 0 = North, clockwise)
             if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
                 targetHeadingDeg = event.webkitCompassHeading;
