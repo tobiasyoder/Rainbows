@@ -54,6 +54,15 @@
             pointer-events: none;
         }
 
+        #grid-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
         #start-screen {
             position: fixed;
             top: 0;
@@ -333,11 +342,12 @@
 <body>
     <div id="video-container">
         <video id="camera-feed" autoplay playsinline muted></video>
+        <canvas id="grid-canvas"></canvas>
         <canvas id="horizon-canvas"></canvas>
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.3.2</div>
+        <div id="version">v2.4.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -346,7 +356,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.3.2</div>
+        <div class="version-line">v2.4.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -402,7 +412,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.3.2';
+        const VERSION = 'v2.4.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -439,9 +449,18 @@
         let orientationControls = null;
         let animationId = null;
 
+        // Three.js grid rendering objects
+        let gridScene = null;
+        let gridRenderer = null;
+        let gridCamera = null;
+        let gridGroup = null;
+
         // Horizon canvas
         const horizonCanvas = document.getElementById('horizon-canvas');
         const horizonCtx = horizonCanvas.getContext('2d');
+
+        // Grid canvas for Three.js
+        const gridCanvas = document.getElementById('grid-canvas');
 
         // Camera vertical field of view (degrees) - used to map pitch to pixels
         // Calculated for typical iPhone (26mm equivalent lens in portrait mode):
@@ -593,7 +612,7 @@
             horizonCtx.scale(dpr, dpr);
         }
 
-        // Draw the horizon line and crosshairs
+        // Draw crosshairs and sun marker
         function drawHorizon() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -604,37 +623,6 @@
             // Center of the canvas
             const centerX = width / 2;
             const centerY = height / 2;
-
-            // Calculate vertical offset based on pitch
-            // Pitch up (positive) = looking above horizon = line moves down
-            // Pitch down (negative) = looking below horizon = line moves up
-            const pitchDeg = radToDeg(currentPitchRad);
-            const pixelsPerDegree = height / VERTICAL_FOV;
-            const verticalOffset = pitchDeg * pixelsPerDegree;
-
-            // Line length - extend well beyond viewport for rotation
-            const lineLength = Math.max(width, height) * 2;
-
-            // Save context state
-            horizonCtx.save();
-
-            // Move to center, apply vertical offset, then rotate
-            // Negate roll: when phone tilts right, horizon in viewfinder tilts left
-            horizonCtx.translate(centerX, centerY + verticalOffset);
-            horizonCtx.rotate(-currentRollRad);
-
-            // Draw the horizon line
-            horizonCtx.beginPath();
-            horizonCtx.moveTo(-lineLength, 0);
-            horizonCtx.lineTo(lineLength, 0);
-
-            // Style: white, 50% opacity, 2px thick
-            horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            horizonCtx.lineWidth = 2;
-            horizonCtx.stroke();
-
-            // Restore context state
-            horizonCtx.restore();
 
             // Draw crosshairs at screen center (not affected by orientation)
             horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
@@ -773,8 +761,300 @@
             // Create DeviceOrientationControls
             orientationControls = new THREE.DeviceOrientationControls(threeCamera);
 
+            // Initialize the grid overlay
+            initGridOverlay();
+
             // Start the update loop
             updateOrientation();
+        }
+
+        // Initialize Three.js grid overlay
+        function initGridOverlay() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const aspectRatio = width / height;
+
+            // Create scene
+            gridScene = new THREE.Scene();
+
+            // Create camera with matching FOV
+            gridCamera = new THREE.PerspectiveCamera(VERTICAL_FOV, aspectRatio, 0.1, 2000);
+            gridCamera.position.set(0, 0, 0);
+
+            // Create renderer with transparent background
+            gridRenderer = new THREE.WebGLRenderer({
+                canvas: gridCanvas,
+                alpha: true,
+                antialias: true
+            });
+            gridRenderer.setSize(width, height);
+            gridRenderer.setPixelRatio(window.devicePixelRatio || 1);
+            gridRenderer.setClearColor(0x000000, 0);
+
+            // Create the grid
+            createCelestialGrid();
+        }
+
+        // Create text sprite for labels
+        function createTextSprite(text, color, fontSize) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Set canvas size based on text
+            canvas.width = 256;
+            canvas.height = 128;
+
+            // Clear with transparent background
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw text
+            context.font = `bold ${fontSize || 48}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // Add slight shadow for readability
+            context.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            context.shadowBlur = 4;
+            context.shadowOffsetX = 1;
+            context.shadowOffsetY = 1;
+
+            context.fillStyle = color || 'rgba(255, 255, 255, 0.9)';
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            // Create sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(40, 20, 1);
+
+            return sprite;
+        }
+
+        // Create the celestial grid
+        function createCelestialGrid() {
+            gridGroup = new THREE.Group();
+
+            const SPHERE_RADIUS = 500;
+
+            // Altitude lines (horizontal circles at various elevations)
+            // -60, -45, -30, -15, 0, 15, 30, 45, 60 degrees
+            const altitudes = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
+
+            altitudes.forEach(alt => {
+                const isHorizon = alt === 0;
+                const isMajor = Math.abs(alt) === 30 || Math.abs(alt) === 60;
+
+                // Calculate radius of circle at this altitude
+                const altRad = degToRad(alt);
+                const circleRadius = SPHERE_RADIUS * Math.cos(altRad);
+                const y = SPHERE_RADIUS * Math.sin(altRad);
+
+                // Create circle geometry
+                const segments = 128;
+                const geometry = new THREE.BufferGeometry();
+                const positions = [];
+
+                for (let i = 0; i <= segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    positions.push(
+                        Math.cos(angle) * circleRadius,
+                        y,
+                        Math.sin(angle) * circleRadius
+                    );
+                }
+
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+                // Style based on importance
+                let color, opacity, lineWidth;
+                if (isHorizon) {
+                    color = 0xffffff;
+                    opacity = 0.6;
+                } else if (isMajor) {
+                    color = 0xaaaaaa;
+                    opacity = 0.4;
+                } else {
+                    color = 0x888888;
+                    opacity = 0.25;
+                }
+
+                const material = new THREE.LineBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: opacity,
+                    depthTest: false,
+                    depthWrite: false
+                });
+
+                const line = new THREE.Line(geometry, material);
+                gridGroup.add(line);
+
+                // Add altitude label on the east side (90 degrees azimuth)
+                if (alt !== 0) {
+                    const labelAngle = degToRad(90); // East side
+                    const labelX = Math.sin(labelAngle) * circleRadius * 0.98;
+                    const labelZ = -Math.cos(labelAngle) * circleRadius * 0.98;
+
+                    const label = createTextSprite(
+                        `${alt > 0 ? '+' : ''}${alt}°`,
+                        alt > 0 ? 'rgba(200, 220, 255, 0.8)' : 'rgba(255, 200, 180, 0.7)',
+                        36
+                    );
+                    label.position.set(labelX, y, labelZ);
+                    gridGroup.add(label);
+                }
+            });
+
+            // Azimuth lines (vertical meridians)
+            // Every 30 degrees: N, NNE(30), NE(60), E(90), etc. - but we'll do every 15 for finer grid
+            // Cardinals: 0 (N), 90 (E), 180 (S), 270 (W)
+            // Intercardinals: 45 (NE), 135 (SE), 225 (SW), 315 (NW)
+            // Minor: 15, 30, 60, 75, etc.
+
+            const azimuthConfig = [
+                { az: 0, label: 'N', cardinal: true },
+                { az: 15, label: '', cardinal: false },
+                { az: 30, label: '', cardinal: false },
+                { az: 45, label: 'NE', cardinal: false, intercardinal: true },
+                { az: 60, label: '', cardinal: false },
+                { az: 75, label: '', cardinal: false },
+                { az: 90, label: 'E', cardinal: true },
+                { az: 105, label: '', cardinal: false },
+                { az: 120, label: '', cardinal: false },
+                { az: 135, label: 'SE', cardinal: false, intercardinal: true },
+                { az: 150, label: '', cardinal: false },
+                { az: 165, label: '', cardinal: false },
+                { az: 180, label: 'S', cardinal: true },
+                { az: 195, label: '', cardinal: false },
+                { az: 210, label: '', cardinal: false },
+                { az: 225, label: 'SW', cardinal: false, intercardinal: true },
+                { az: 240, label: '', cardinal: false },
+                { az: 255, label: '', cardinal: false },
+                { az: 270, label: 'W', cardinal: true },
+                { az: 285, label: '', cardinal: false },
+                { az: 300, label: '', cardinal: false },
+                { az: 315, label: 'NW', cardinal: false, intercardinal: true },
+                { az: 330, label: '', cardinal: false },
+                { az: 345, label: '', cardinal: false }
+            ];
+
+            azimuthConfig.forEach(config => {
+                const azRad = degToRad(config.az);
+
+                // Create vertical arc from -70 to 70 degrees altitude
+                const segments = 64;
+                const geometry = new THREE.BufferGeometry();
+                const positions = [];
+
+                for (let i = 0; i <= segments; i++) {
+                    const alt = -70 + (140 * i / segments);
+                    const altRad = degToRad(alt);
+                    const r = SPHERE_RADIUS * Math.cos(altRad);
+                    const y = SPHERE_RADIUS * Math.sin(altRad);
+
+                    // Azimuth: 0 = North = -Z, 90 = East = +X
+                    positions.push(
+                        Math.sin(azRad) * r,
+                        y,
+                        -Math.cos(azRad) * r
+                    );
+                }
+
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+                // Style based on importance
+                let color, opacity;
+                if (config.cardinal) {
+                    color = 0xffffff;
+                    opacity = 0.6;
+                } else if (config.intercardinal) {
+                    color = 0xcccccc;
+                    opacity = 0.4;
+                } else {
+                    color = 0x888888;
+                    opacity = 0.2;
+                }
+
+                const material = new THREE.LineBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: opacity,
+                    depthTest: false,
+                    depthWrite: false
+                });
+
+                const line = new THREE.Line(geometry, material);
+                gridGroup.add(line);
+
+                // Add direction label at horizon level
+                if (config.label) {
+                    const labelRadius = SPHERE_RADIUS * 0.95;
+                    const labelY = config.cardinal ? 35 : 25; // Slightly above horizon
+
+                    const label = createTextSprite(
+                        config.label,
+                        config.cardinal ? 'rgba(255, 255, 255, 0.95)' : 'rgba(200, 200, 200, 0.8)',
+                        config.cardinal ? 56 : 42
+                    );
+                    label.position.set(
+                        Math.sin(azRad) * labelRadius,
+                        labelY,
+                        -Math.cos(azRad) * labelRadius
+                    );
+                    label.scale.set(config.cardinal ? 50 : 35, config.cardinal ? 25 : 17.5, 1);
+                    gridGroup.add(label);
+
+                    // Also add degree label below for cardinals
+                    if (config.cardinal) {
+                        const degLabel = createTextSprite(
+                            `${config.az}°`,
+                            'rgba(180, 180, 180, 0.7)',
+                            32
+                        );
+                        degLabel.position.set(
+                            Math.sin(azRad) * labelRadius,
+                            -25,
+                            -Math.cos(azRad) * labelRadius
+                        );
+                        degLabel.scale.set(30, 15, 1);
+                        gridGroup.add(degLabel);
+                    }
+                }
+            });
+
+            gridScene.add(gridGroup);
+        }
+
+        // Update and render the grid
+        function updateGrid() {
+            if (!gridRenderer || !gridScene || !gridCamera) return;
+
+            // Copy orientation from the device orientation camera
+            gridCamera.quaternion.copy(threeCamera.quaternion);
+
+            // Render
+            gridRenderer.render(gridScene, gridCamera);
+        }
+
+        // Handle grid resize
+        function resizeGrid() {
+            if (!gridRenderer || !gridCamera) return;
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            gridCamera.aspect = width / height;
+            gridCamera.updateProjectionMatrix();
+
+            gridRenderer.setSize(width, height);
         }
 
         // Convert radians to degrees
@@ -871,7 +1151,10 @@
                 currentRollRad = roll;
                 rollEl.textContent = Math.round(radToDeg(roll)) + '°';
 
-                // Draw the horizon line
+                // Update the grid overlay
+                updateGrid();
+
+                // Draw the horizon line and sun marker
                 drawHorizon();
             }
 
@@ -1029,6 +1312,7 @@
         // Handle window resize
         window.addEventListener('resize', () => {
             resizeCanvas();
+            resizeGrid();
             drawHorizon();
         });
 
