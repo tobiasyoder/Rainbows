@@ -45,6 +45,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center center;
+        }
+
+        #camera-feed.zoomed {
+            transform: scale(5);
         }
 
         #horizon-canvas {
@@ -78,6 +84,16 @@
             align-items: center;
             z-index: 100;
             overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         #start-screen::before {
@@ -114,7 +130,18 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: rainbow-shift 8s ease infinite;
+            animation: rainbow-shift 8s ease infinite, fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         @keyframes rainbow-shift {
@@ -129,6 +156,7 @@
             text-align: center;
             letter-spacing: 2px;
             text-transform: uppercase;
+            animation: fadeIn 0.8s ease-out 0.2s both;
         }
 
         #author-credit {
@@ -151,15 +179,37 @@
             border-radius: 18px;
             cursor: pointer;
             touch-action: manipulation;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: pulse 2s ease-in-out infinite, slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(0, 122, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         #start-btn:active {
             background: linear-gradient(135deg, rgba(0, 86, 179, 0.95) 0%, rgba(0, 60, 140, 0.95) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+            transition: all 0.1s ease;
         }
 
         #start-btn:disabled {
@@ -213,6 +263,18 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             min-width: 160px;
             overflow: hidden;
+            animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         #debug-overlay .panel-header {
@@ -241,7 +303,7 @@
         #debug-overlay .panel-toggle {
             color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .panel-toggle.collapsed {
@@ -252,7 +314,7 @@
             padding: 12px 14px;
             max-height: 600px;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         }
 
         #debug-overlay .panel-content.collapsed {
@@ -305,7 +367,7 @@
         #debug-overlay .section-toggle {
             color: rgba(255, 255, 255, 0.5);
             font-size: 10px;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .section-toggle.collapsed {
@@ -315,7 +377,7 @@
         #debug-overlay .section-content {
             overflow: hidden;
             max-height: 200px;
-            transition: max-height 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         }
 
         #debug-overlay .section-content.collapsed {
@@ -337,6 +399,22 @@
             color: #00ff00;
             text-align: right;
             min-width: 80px;
+            transition: all 0.3s ease;
+        }
+
+        #debug-overlay .value.updated {
+            animation: valuePulse 0.5s ease;
+        }
+
+        @keyframes valuePulse {
+            0%, 100% {
+                transform: scale(1);
+                color: #00ff00;
+            }
+            50% {
+                transform: scale(1.1);
+                color: #00ff88;
+            }
         }
 
         /* Inline compass offset control in debug panel */
@@ -408,6 +486,19 @@
             display: none !important;
         }
 
+        #start-screen.fading-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
         /* Date/Time Picker */
         #datetime-container {
             position: fixed;
@@ -417,6 +508,18 @@
             z-index: 50;
             display: none;
             padding-bottom: 10px;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         .datetime-wrapper {
@@ -464,6 +567,16 @@
         .datetime-wrapper.scrubbing {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
             border-color: rgba(255, 255, 255, 0.3);
+            animation: scrubPulse 0.6s ease-in-out infinite;
+        }
+
+        @keyframes scrubPulse {
+            0%, 100% {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            }
         }
 
         .datetime-wrapper.scrubbing .scrub-arrow {
@@ -494,8 +607,13 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
+        #info-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         #info-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
+            transform: scale(0.9);
         }
 
         /* Info Modal */
@@ -512,10 +630,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #info-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #info-modal-content {
@@ -528,6 +649,23 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-modal.visible #info-modal-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         #info-modal h3 {
@@ -557,6 +695,12 @@
             font-size: 14px;
             cursor: pointer;
             margin-top: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-modal .info-close:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         /* Compass offset input modal */
@@ -573,10 +717,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #offset-input-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #offset-input-content {
@@ -588,6 +735,12 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #offset-input-modal.visible #offset-input-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #offset-input-content label {
@@ -629,6 +782,11 @@
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .offset-input-btn:active {
+            transform: scale(0.95);
         }
 
         #offset-apply-btn {
@@ -677,7 +835,8 @@
 
         #gps-edit-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+            transition: all 0.1s ease;
         }
 
         /* GPS Modal */
@@ -694,10 +853,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #gps-modal.visible {
             display: flex;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         #gps-modal-content {
@@ -710,6 +872,12 @@
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #gps-modal.visible #gps-modal-content {
+            animation: modalPopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #gps-modal h3 {
@@ -765,8 +933,12 @@
             transition: all 0.2s ease;
         }
 
+        .gps-modal-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .gps-modal-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
 
         #gps-apply-btn {
@@ -797,6 +969,59 @@
 
         .gps-source.manual {
             color: #FFD60A;
+        }
+
+        /* Zoom Button */
+        #zoom-btn {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 80px);
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(15, 25, 50, 0.85) 0%, rgba(10, 20, 40, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: 600;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 50;
+            display: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #zoom-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        #zoom-btn:active {
+            transform: scale(0.95);
+            transition: all 0.1s ease;
+        }
+
+        #zoom-btn.zoomed {
+            background: linear-gradient(135deg, rgba(255, 150, 0, 0.9) 0%, rgba(255, 100, 0, 0.85) 100%);
+            box-shadow: 0 8px 24px rgba(255, 150, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        #zoom-btn.zoomed:hover {
+            box-shadow: 0 12px 32px rgba(255, 150, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -932,6 +1157,7 @@
 
     <button id="gps-edit-btn">Edit GPS</button>
     <button id="info-btn">i</button>
+    <button id="zoom-btn">5x</button>
 
     <div id="datetime-container">
         <div class="datetime-wrapper" id="datetime-wrapper">
@@ -1055,6 +1281,9 @@
         const infoModal = document.getElementById('info-modal');
         const infoClose = document.getElementById('info-close');
 
+        // Zoom button
+        const zoomBtn = document.getElementById('zoom-btn');
+
         // Offset input modal
         const offsetInputModal = document.getElementById('offset-input-modal');
         const offsetInput = document.getElementById('offset-input');
@@ -1116,6 +1345,8 @@
         // Calculated for typical iPhone (26mm equivalent lens in portrait mode):
         // VFOV = 2 * atan(36 / (2 * 26)) ≈ 69°
         const VERTICAL_FOV = 69;
+        const ZOOM_LEVEL = 5; // 5x zoom multiplier
+        let isZoomed = false;
 
         // Current orientation values (radians) for horizon drawing
         let currentPitchRad = 0;
@@ -1227,13 +1458,33 @@
         // Update GPS display based on current mode
         function updateGPSDisplay() {
             if (useManualGPS && manualLat !== null && manualLon !== null) {
-                latEl.textContent = manualLat.toFixed(2) + '°';
-                lonEl.textContent = manualLon.toFixed(2) + '°';
+                const latText = manualLat.toFixed(2) + '°';
+                const lonText = manualLon.toFixed(2) + '°';
+                if (latEl.textContent !== latText) {
+                    latEl.classList.add('updated');
+                    setTimeout(() => latEl.classList.remove('updated'), 500);
+                }
+                if (lonEl.textContent !== lonText) {
+                    lonEl.classList.add('updated');
+                    setTimeout(() => lonEl.classList.remove('updated'), 500);
+                }
+                latEl.textContent = latText;
+                lonEl.textContent = lonText;
                 gpsSourceEl.textContent = 'Manual GPS';
                 gpsSourceEl.classList.add('manual');
             } else if (deviceLat !== null && deviceLon !== null) {
-                latEl.textContent = deviceLat.toFixed(2) + '°';
-                lonEl.textContent = deviceLon.toFixed(2) + '°';
+                const latText = deviceLat.toFixed(2) + '°';
+                const lonText = deviceLon.toFixed(2) + '°';
+                if (latEl.textContent !== latText) {
+                    latEl.classList.add('updated');
+                    setTimeout(() => latEl.classList.remove('updated'), 500);
+                }
+                if (lonEl.textContent !== lonText) {
+                    lonEl.classList.add('updated');
+                    setTimeout(() => lonEl.classList.remove('updated'), 500);
+                }
+                latEl.textContent = latText;
+                lonEl.textContent = lonText;
                 gpsSourceEl.textContent = 'Device GPS';
                 gpsSourceEl.classList.remove('manual');
             }
@@ -1363,11 +1614,33 @@
             antiSolarAzimuthDeg = normalizeAngle(sunAzimuthDeg + 180);
             antiSolarAltitudeDeg = -sunAltitudeDeg;
 
-            // Update debug display
-            sunAzimuthEl.textContent = Math.round(sunAzimuthDeg) + '°';
-            sunAltitudeEl.textContent = Math.round(sunAltitudeDeg) + '°';
-            antisolarAzimuthEl.textContent = Math.round(antiSolarAzimuthDeg) + '°';
-            antisolarAltitudeEl.textContent = Math.round(antiSolarAltitudeDeg) + '°';
+            // Update debug display with animation
+            const sunAzText = Math.round(sunAzimuthDeg) + '°';
+            const sunAltText = Math.round(sunAltitudeDeg) + '°';
+            const asAzText = Math.round(antiSolarAzimuthDeg) + '°';
+            const asAltText = Math.round(antiSolarAltitudeDeg) + '°';
+            
+            if (sunAzimuthEl.textContent !== sunAzText) {
+                sunAzimuthEl.classList.add('updated');
+                setTimeout(() => sunAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (sunAltitudeEl.textContent !== sunAltText) {
+                sunAltitudeEl.classList.add('updated');
+                setTimeout(() => sunAltitudeEl.classList.remove('updated'), 500);
+            }
+            if (antisolarAzimuthEl.textContent !== asAzText) {
+                antisolarAzimuthEl.classList.add('updated');
+                setTimeout(() => antisolarAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (antisolarAltitudeEl.textContent !== asAltText) {
+                antisolarAltitudeEl.classList.add('updated');
+                setTimeout(() => antisolarAltitudeEl.classList.remove('updated'), 500);
+            }
+            
+            sunAzimuthEl.textContent = sunAzText;
+            sunAltitudeEl.textContent = sunAltText;
+            antisolarAzimuthEl.textContent = asAzText;
+            antisolarAltitudeEl.textContent = asAltText;
 
             // Update the Three.js sun marker position
             updateSunMarkerPosition();
@@ -1408,7 +1681,8 @@
             gridScene = new THREE.Scene();
 
             // Create camera with matching FOV
-            gridCamera = new THREE.PerspectiveCamera(VERTICAL_FOV, aspectRatio, 0.1, 2000);
+            const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+            gridCamera = new THREE.PerspectiveCamera(currentFOV, aspectRatio, 0.1, 2000);
             gridCamera.position.set(0, 0, 0);
 
             // Create renderer with transparent background
@@ -2042,9 +2316,35 @@
             const height = window.innerHeight;
 
             gridCamera.aspect = width / height;
+            const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+            gridCamera.fov = currentFOV;
             gridCamera.updateProjectionMatrix();
 
             gridRenderer.setSize(width, height);
+        }
+
+        // Toggle zoom
+        function toggleZoom() {
+            triggerHaptic('medium');
+            isZoomed = !isZoomed;
+            
+            // Update camera feed zoom
+            if (isZoomed) {
+                videoElement.classList.add('zoomed');
+                zoomBtn.classList.add('zoomed');
+                zoomBtn.textContent = '1x';
+            } else {
+                videoElement.classList.remove('zoomed');
+                zoomBtn.classList.remove('zoomed');
+                zoomBtn.textContent = '5x';
+            }
+            
+            // Update grid camera FOV
+            if (gridCamera) {
+                const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+                gridCamera.fov = currentFOV;
+                gridCamera.updateProjectionMatrix();
+            }
         }
 
         // Convert radians to degrees
@@ -2099,10 +2399,19 @@
                     let heading = Math.atan2(direction.x, -direction.z);
                     heading = normalizeAngle(radToDeg(heading));
                     currentHeadingDeg = heading;
+                    if (headingEl.textContent !== Math.round(heading) + '° (rel)') {
+                        headingEl.classList.add('updated');
+                        setTimeout(() => headingEl.classList.remove('updated'), 500);
+                    }
                     headingEl.textContent = Math.round(heading) + '° (rel)';
                 } else {
                     // Smoothly interpolate toward target compass heading
-                    currentHeadingDeg = lerpAngle(currentHeadingDeg, targetHeadingDeg, HEADING_SMOOTHING);
+                    const newHeading = lerpAngle(currentHeadingDeg, targetHeadingDeg, HEADING_SMOOTHING);
+                    if (Math.round(newHeading) !== Math.round(currentHeadingDeg)) {
+                        headingEl.classList.add('updated');
+                        setTimeout(() => headingEl.classList.remove('updated'), 500);
+                    }
+                    currentHeadingDeg = newHeading;
                     headingEl.textContent = Math.round(currentHeadingDeg) + '°';
                 }
 
@@ -2113,8 +2422,13 @@
                 // direction.y gives vertical component: positive = up, negative = down
                 // asin gives angle from horizontal
                 const pitch = Math.asin(direction.y);
+                const pitchDeg = Math.round(radToDeg(pitch));
+                if (pitchEl.textContent !== pitchDeg + '°') {
+                    pitchEl.classList.add('updated');
+                    setTimeout(() => pitchEl.classList.remove('updated'), 500);
+                }
                 currentPitchRad = pitch;
-                pitchEl.textContent = Math.round(radToDeg(pitch)) + '°';
+                pitchEl.textContent = pitchDeg + '°';
 
                 // Calculate roll (rotation around viewing axis)
                 // Get the camera's up vector in world space
@@ -2138,8 +2452,13 @@
                     up.dot(right),
                     up.dot(expectedUp)
                 );
+                const rollDeg = Math.round(radToDeg(roll));
+                if (rollEl.textContent !== rollDeg + '°') {
+                    rollEl.classList.add('updated');
+                    setTimeout(() => rollEl.classList.remove('updated'), 500);
+                }
                 currentRollRad = roll;
-                rollEl.textContent = Math.round(radToDeg(roll)) + '°';
+                rollEl.textContent = rollDeg + '°';
 
                 // Update the grid overlay
                 updateGrid();
@@ -2260,11 +2579,15 @@
                 initCompassOffset();
 
                 // Hide start screen and show UI elements
-                startScreen.classList.add('hidden');
+                startScreen.classList.add('fading-out');
+                setTimeout(() => {
+                    startScreen.classList.add('hidden');
+                }, 500);
                 debugOverlay.style.display = 'block';
                 gpsEditBtn.style.display = 'block';
                 infoBtn.style.display = 'block';
                 datetimeContainer.style.display = 'block';
+                zoomBtn.style.display = 'block';
             } else {
                 // Camera failed - allow retry
                 startBtn.disabled = false;
@@ -2663,6 +2986,9 @@
                 offsetInputModal.classList.remove('visible');
             }
         });
+
+        // Zoom button handler
+        zoomBtn.addEventListener('click', toggleZoom);
     </script>
 </body>
 </html>
