@@ -120,6 +120,127 @@
             50% { background-position: 200% center; }
         }
 
+        /* Sexy UI Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOutDown {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) translateX(-50%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) translateX(-50%);
+            }
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            70% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(0, 122, 255, 0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 4px 24px rgba(100, 150, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            }
+        }
+
+        @keyframes zoomPulse {
+            0%, 100% {
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 200, 50, 0);
+            }
+            50% {
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 6px rgba(255, 200, 50, 0.2);
+            }
+        }
+
+        #start-screen.hiding {
+            animation: fadeOutDown 0.5s ease forwards;
+        }
+
         #app-subtitle {
             color: rgba(255, 255, 255, 0.5);
             font-size: 14px;
@@ -149,21 +270,24 @@
             border-radius: 18px;
             cursor: pointer;
             touch-action: manipulation;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 122, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: pulse 2s ease-in-out infinite;
         }
 
         #start-btn:active {
             background: linear-gradient(135deg, rgba(0, 86, 179, 0.95) 0%, rgba(0, 60, 140, 0.95) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+            animation: none;
         }
 
         #start-btn:disabled {
             background: linear-gradient(135deg, rgba(85, 85, 85, 0.8) 0%, rgba(60, 60, 60, 0.8) 100%);
             cursor: not-allowed;
             box-shadow: none;
+            animation: none;
         }
 
         #permission-note {
@@ -211,6 +335,11 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             min-width: 160px;
             overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        #debug-overlay.visible {
+            animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #debug-overlay .panel-header {
@@ -223,10 +352,11 @@
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
+            transition: background 0.2s ease;
         }
 
         #debug-overlay .panel-header:active {
-            opacity: 0.7;
+            background: linear-gradient(135deg, rgba(30, 50, 90, 0.6) 0%, rgba(25, 40, 75, 0.5) 100%);
         }
 
         #debug-overlay .panel-title {
@@ -239,7 +369,7 @@
         #debug-overlay .panel-toggle {
             color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .panel-toggle.collapsed {
@@ -250,7 +380,9 @@
             padding: 12px 14px;
             max-height: 600px;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
         }
 
         #debug-overlay .panel-content.collapsed {
@@ -286,10 +418,11 @@
             margin-bottom: 6px;
             user-select: none;
             -webkit-user-select: none;
+            transition: transform 0.15s ease;
         }
 
         #debug-overlay .section-header:active {
-            opacity: 0.7;
+            transform: scale(0.98);
         }
 
         #debug-overlay .section-title {
@@ -303,7 +436,7 @@
         #debug-overlay .section-toggle {
             color: rgba(255, 255, 255, 0.5);
             font-size: 10px;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #debug-overlay .section-toggle.collapsed {
@@ -313,7 +446,8 @@
         #debug-overlay .section-content {
             overflow: hidden;
             max-height: 200px;
-            transition: max-height 0.3s ease, opacity 0.2s ease;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.25s ease;
         }
 
         #debug-overlay .section-content.collapsed {
@@ -417,6 +551,10 @@
             padding-bottom: 10px;
         }
 
+        #datetime-container.visible {
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
         .datetime-wrapper {
             display: flex;
             align-items: center;
@@ -428,6 +566,9 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.2s ease,
+                        box-shadow 0.2s ease;
         }
 
         .scrub-arrow {
@@ -439,6 +580,25 @@
             color: rgba(255, 255, 255, 0.4);
             font-size: 12px;
             pointer-events: none;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .datetime-wrapper.scrubbing .scrub-arrow:first-child {
+            animation: arrowBounceLeft 0.4s ease infinite;
+        }
+
+        .datetime-wrapper.scrubbing .scrub-arrow:last-child {
+            animation: arrowBounceRight 0.4s ease infinite;
+        }
+
+        @keyframes arrowBounceLeft {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-3px); }
+        }
+
+        @keyframes arrowBounceRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
         }
 
         #datetime-picker {
@@ -462,10 +622,12 @@
         .datetime-wrapper.scrubbing {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
             border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(100, 150, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         .datetime-wrapper.scrubbing .scrub-arrow {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         /* Info button */
@@ -490,10 +652,18 @@
             display: none;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.2s ease,
+                        box-shadow 0.2s ease;
+        }
+
+        #info-btn.visible {
+            animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #info-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
+            transform: scale(0.92);
         }
 
         /* Info Modal */
@@ -503,17 +673,25 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
             z-index: 150;
             display: none;
             justify-content: center;
             align-items: center;
+            transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
         }
 
         #info-modal.visible {
             display: flex;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        #info-modal.visible #info-modal-content {
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #info-modal-content {
@@ -670,12 +848,71 @@
             display: none;
             cursor: pointer;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.2s ease,
+                        box-shadow 0.2s ease;
+        }
+
+        #gps-edit-btn.visible {
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         #gps-edit-btn:active {
             background: linear-gradient(135deg, rgba(25, 40, 75, 0.85) 0%, rgba(20, 35, 60, 0.8) 100%);
-            transform: scale(0.98);
+            transform: scale(0.95);
+        }
+
+        /* Zoom button */
+        #zoom-btn {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 20px);
+            right: 20px;
+            margin-bottom: 90px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(15, 25, 50, 0.75) 0%, rgba(10, 20, 40, 0.7) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 50;
+            display: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.2s ease,
+                        box-shadow 0.3s ease;
+        }
+
+        #zoom-btn.visible {
+            animation: popIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        #zoom-btn:active {
+            transform: scale(0.92);
+        }
+
+        #zoom-btn.zoomed {
+            background: linear-gradient(135deg, rgba(255, 180, 50, 0.85) 0%, rgba(220, 140, 30, 0.8) 100%);
+            border-color: rgba(255, 220, 100, 0.4);
+            animation: zoomPulse 2s ease-in-out infinite;
+        }
+
+        #zoom-btn .zoom-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.1;
+        }
+
+        #zoom-btn .zoom-label {
+            font-size: 10px;
+            opacity: 0.8;
+            font-weight: 400;
         }
 
         /* GPS Modal */
@@ -806,7 +1043,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v3.2.1</div>
+        <div id="version">v3.3.0</div>
         <div id="app-title">Rainbows</div>
         <div id="app-subtitle">AR Photography Planner</div>
         <button id="start-btn">Start</button>
@@ -824,7 +1061,7 @@
         </div>
 
         <div class="panel-content" id="panel-content">
-            <div class="version-line">v3.2.1</div>
+            <div class="version-line">v3.3.0</div>
 
             <!-- Location Section -->
             <div class="section" data-section="location">
@@ -930,6 +1167,12 @@
 
     <button id="gps-edit-btn">Edit GPS</button>
     <button id="info-btn">i</button>
+    <button id="zoom-btn">
+        <div class="zoom-icon">
+            <span>1x</span>
+            <span class="zoom-label">zoom</span>
+        </div>
+    </button>
 
     <div id="datetime-container">
         <div class="datetime-wrapper" id="datetime-wrapper">
@@ -977,7 +1220,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v3.2.1';
+        const VERSION = 'v3.3.0';
 
         // Haptic feedback utility
         // Note: iOS Safari doesn't support haptic feedback via web APIs
@@ -1053,6 +1296,10 @@
         const infoModal = document.getElementById('info-modal');
         const infoClose = document.getElementById('info-close');
 
+        // Zoom button
+        const zoomBtn = document.getElementById('zoom-btn');
+        const zoomLabel = zoomBtn.querySelector('.zoom-icon span:first-child');
+
         // Offset input modal
         const offsetInputModal = document.getElementById('offset-input-modal');
         const offsetInput = document.getElementById('offset-input');
@@ -1074,6 +1321,12 @@
 
         // Panel collapsed state
         let panelCollapsed = false;
+
+        // Zoom state
+        let isZoomed = false;
+        const ZOOM_LEVEL = 5;
+        const BASE_FOV = 69; // Vertical FOV in degrees
+        let videoTrack = null;
 
         // Time scrubber state
         let scrubStartX = 0;
@@ -1207,6 +1460,8 @@
                     audio: false
                 });
                 videoElement.srcObject = stream;
+                // Store video track for zoom control
+                videoTrack = stream.getVideoTracks()[0];
                 await videoElement.play();
                 return true;
             } catch (err) {
@@ -1220,6 +1475,71 @@
                 }
                 return false;
             }
+        }
+
+        // Toggle zoom level
+        async function toggleZoom() {
+            isZoomed = !isZoomed;
+            triggerHaptic(isZoomed ? 'heavy' : 'medium');
+
+            const targetZoom = isZoomed ? ZOOM_LEVEL : 1;
+            const targetFOV = BASE_FOV / targetZoom;
+
+            // Update zoom button appearance
+            zoomBtn.classList.toggle('zoomed', isZoomed);
+            zoomLabel.textContent = isZoomed ? '5x' : '1x';
+
+            // Try to zoom the camera using constraints
+            if (videoTrack) {
+                const capabilities = videoTrack.getCapabilities();
+                if (capabilities.zoom) {
+                    const minZoom = capabilities.zoom.min;
+                    const maxZoom = capabilities.zoom.max;
+                    const clampedZoom = Math.min(Math.max(targetZoom, minZoom), maxZoom);
+                    try {
+                        await videoTrack.applyConstraints({
+                            advanced: [{ zoom: clampedZoom }]
+                        });
+                    } catch (e) {
+                        console.log('Camera zoom not supported, using CSS transform');
+                        // Fallback: use CSS transform on video
+                        videoElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                        videoElement.style.transform = isZoomed ? `scale(${ZOOM_LEVEL})` : 'scale(1)';
+                    }
+                } else {
+                    // Fallback: use CSS transform on video
+                    videoElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    videoElement.style.transform = isZoomed ? `scale(${ZOOM_LEVEL})` : 'scale(1)';
+                }
+            }
+
+            // Animate the Three.js camera FOV to match
+            animateFOV(targetFOV);
+        }
+
+        // Animate FOV change smoothly
+        function animateFOV(targetFOV) {
+            if (!gridCamera) return;
+
+            const startFOV = gridCamera.fov;
+            const startTime = performance.now();
+            const duration = 400; // ms
+
+            function updateFOV(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                gridCamera.fov = startFOV + (targetFOV - startFOV) * eased;
+                gridCamera.updateProjectionMatrix();
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateFOV);
+                }
+            }
+
+            requestAnimationFrame(updateFOV);
         }
 
         // Update GPS display based on current mode
@@ -2257,12 +2577,35 @@
                 // Initialize compass offset control
                 initCompassOffset();
 
-                // Hide start screen and show UI elements
-                startScreen.classList.add('hidden');
+                // Hide start screen with animation and show UI elements
+                startScreen.classList.add('hiding');
+                setTimeout(() => {
+                    startScreen.classList.add('hidden');
+                }, 500);
+
+                // Show UI elements with staggered animations
                 debugOverlay.style.display = 'block';
-                gpsEditBtn.style.display = 'block';
-                infoBtn.style.display = 'block';
-                datetimeContainer.style.display = 'block';
+                debugOverlay.classList.add('visible');
+
+                setTimeout(() => {
+                    gpsEditBtn.style.display = 'block';
+                    gpsEditBtn.classList.add('visible');
+                }, 100);
+
+                setTimeout(() => {
+                    infoBtn.style.display = 'flex';
+                    infoBtn.classList.add('visible');
+                }, 200);
+
+                setTimeout(() => {
+                    datetimeContainer.style.display = 'block';
+                    datetimeContainer.classList.add('visible');
+                }, 300);
+
+                setTimeout(() => {
+                    zoomBtn.style.display = 'flex';
+                    zoomBtn.classList.add('visible');
+                }, 400);
             } else {
                 // Camera failed - allow retry
                 startBtn.disabled = false;
@@ -2601,6 +2944,11 @@
         infoBtn.addEventListener('click', () => {
             triggerHaptic('light');
             infoModal.classList.add('visible');
+        });
+
+        // Zoom button handler
+        zoomBtn.addEventListener('click', () => {
+            toggleZoom();
         });
 
         infoClose.addEventListener('click', () => {
