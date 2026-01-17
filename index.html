@@ -1347,6 +1347,13 @@
         const VERTICAL_FOV = 69;
         const ZOOM_LEVEL = 5; // 5x zoom multiplier
         let isZoomed = false;
+        let targetFOV = VERTICAL_FOV; // Target FOV for smooth transitions
+        let currentFOV = VERTICAL_FOV; // Current FOV (smoothly interpolated)
+        const FOV_SMOOTHING = 0.15; // FOV transition smoothing (lower = smoother)
+        
+        // Smoothed quaternion for zoom mode
+        let smoothedQuaternion = new THREE.Quaternion();
+        const QUATERNION_SMOOTHING = 0.2; // Quaternion smoothing in zoom mode (0-1, lower = smoother)
 
         // Current orientation values (radians) for horizon drawing
         let currentPitchRad = 0;
@@ -1681,9 +1688,13 @@
             gridScene = new THREE.Scene();
 
             // Create camera with matching FOV
-            const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+            targetFOV = VERTICAL_FOV;
+            currentFOV = VERTICAL_FOV;
             gridCamera = new THREE.PerspectiveCamera(currentFOV, aspectRatio, 0.1, 2000);
             gridCamera.position.set(0, 0, 0);
+            
+            // Initialize smoothed quaternion
+            smoothedQuaternion = new THREE.Quaternion();
 
             // Create renderer with transparent background
             gridRenderer = new THREE.WebGLRenderer({
@@ -2301,8 +2312,32 @@
         function updateGrid() {
             if (!gridRenderer || !gridScene || !gridCamera) return;
 
-            // Copy orientation from the device orientation camera
-            gridCamera.quaternion.copy(threeCamera.quaternion);
+            // Smoothly interpolate FOV towards target
+            const fovDiff = targetFOV - currentFOV;
+            if (Math.abs(fovDiff) > 0.1) {
+                currentFOV += fovDiff * FOV_SMOOTHING;
+                gridCamera.fov = currentFOV;
+                gridCamera.updateProjectionMatrix();
+            } else {
+                currentFOV = targetFOV;
+                if (gridCamera.fov !== currentFOV) {
+                    gridCamera.fov = currentFOV;
+                    gridCamera.updateProjectionMatrix();
+                }
+            }
+
+            // Apply orientation with smoothing in zoom mode
+            if (isZoomed) {
+                // Smoothly interpolate quaternion in zoom mode to reduce jitter
+                // slerp interpolates from current quaternion towards target (alpha: 0 = no change, 1 = full target)
+                smoothedQuaternion.slerp(threeCamera.quaternion, QUATERNION_SMOOTHING);
+                gridCamera.quaternion.copy(smoothedQuaternion);
+            } else {
+                // Direct copy when not zoomed for responsiveness
+                gridCamera.quaternion.copy(threeCamera.quaternion);
+                // Keep smoothed quaternion in sync
+                smoothedQuaternion.copy(threeCamera.quaternion);
+            }
 
             // Render
             gridRenderer.render(gridScene, gridCamera);
@@ -2316,8 +2351,8 @@
             const height = window.innerHeight;
 
             gridCamera.aspect = width / height;
-            const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
-            gridCamera.fov = currentFOV;
+            // Update target FOV (will smoothly transition)
+            targetFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
             gridCamera.updateProjectionMatrix();
 
             gridRenderer.setSize(width, height);
@@ -2339,11 +2374,13 @@
                 zoomBtn.textContent = '5x';
             }
             
-            // Update grid camera FOV
+            // Update target FOV (will smoothly animate via updateGrid)
             if (gridCamera) {
-                const currentFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
-                gridCamera.fov = currentFOV;
-                gridCamera.updateProjectionMatrix();
+                targetFOV = isZoomed ? VERTICAL_FOV / ZOOM_LEVEL : VERTICAL_FOV;
+                // Reset smoothed quaternion when toggling zoom for instant alignment
+                if (threeCamera) {
+                    smoothedQuaternion.copy(threeCamera.quaternion);
+                }
             }
         }
 
