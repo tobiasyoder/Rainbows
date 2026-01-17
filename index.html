@@ -1112,6 +1112,24 @@
                 </div>
             </div>
 
+            <!-- Moon Section -->
+            <div class="section" data-section="moon">
+                <div class="section-header" onclick="toggleSection('moon'); event.stopPropagation();">
+                    <span class="section-title">Moon Position</span>
+                    <span class="section-toggle" id="toggle-moon">▼</span>
+                </div>
+                <div class="section-content" id="content-moon">
+                    <div class="row">
+                        <span class="label">MOON AZ</span>
+                        <span class="value" id="moon-azimuth" style="color: #E6E6FA;">--°</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">MOON ALT</span>
+                        <span class="value" id="moon-altitude" style="color: #E6E6FA;">--°</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Anti-solar Section -->
             <div class="section" data-section="antisolar">
                 <div class="section-header" onclick="toggleSection('antisolar'); event.stopPropagation();">
@@ -1259,6 +1277,8 @@
         const gpsSourceEl = document.getElementById('gps-source');
         const sunAzimuthEl = document.getElementById('sun-azimuth');
         const sunAltitudeEl = document.getElementById('sun-altitude');
+        const moonAzimuthEl = document.getElementById('moon-azimuth');
+        const moonAltitudeEl = document.getElementById('moon-altitude');
         const antisolarAzimuthEl = document.getElementById('antisolar-azimuth');
         const antisolarAltitudeEl = document.getElementById('antisolar-altitude');
 
@@ -1316,6 +1336,7 @@
             location: true,
             orientation: true,
             sun: true,
+            moon: true,
             antisolar: true,
             compass: true
         };
@@ -1331,6 +1352,7 @@
         let gridCamera = null;
         let gridGroup = null;
         let sunMarker = null;  // Three.js sun marker sprite
+        let moonMarker = null;  // Three.js moon marker sprite
         let antiSolarMarker = null;  // Anti-solar point marker
         let rainbowRing = null;  // Rainbow ring around anti-solar point
 
@@ -1377,6 +1399,10 @@
         // Sun position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
         let sunAzimuthDeg = 0;
         let sunAltitudeDeg = 0;
+
+        // Moon position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
+        let moonAzimuthDeg = 0;
+        let moonAltitudeDeg = 0;
 
         // Anti-solar point position (opposite of sun)
         let antiSolarAzimuthDeg = 0;
@@ -1846,6 +1872,216 @@
             sunMarker.position.set(x, y, z);
         }
 
+        // Calculate moon position using SunCalc
+        function calculateMoonPosition() {
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                moonAzimuthEl.textContent = '--°';
+                moonAltitudeEl.textContent = '--°';
+                updateMoonMarkerPosition();  // Hide moon marker when no GPS
+                return;
+            }
+
+            // Get moon position from SunCalc
+            // Note: SunCalc returns azimuth in radians, measured from SOUTH, clockwise
+            // We need to convert to degrees from NORTH (0-360)
+            const moonPos = SunCalc.getMoonPosition(selectedDateTime, gps.lat, gps.lon);
+
+            // Convert altitude from radians to degrees
+            moonAltitudeDeg = radToDeg(moonPos.altitude);
+
+            // Convert azimuth from radians (from south) to degrees (from north)
+            // SunCalc azimuth: 0 = south, positive = westward
+            // We want: 0 = north, positive = eastward (clockwise)
+            // Conversion: add 180° to flip from south to north reference
+            moonAzimuthDeg = normalizeAngle(radToDeg(moonPos.azimuth) + 180);
+
+            // Update debug display with animation
+            const moonAzText = Math.round(moonAzimuthDeg) + '°';
+            const moonAltText = Math.round(moonAltitudeDeg) + '°';
+            
+            if (moonAzimuthEl.textContent !== moonAzText) {
+                moonAzimuthEl.classList.add('updated');
+                setTimeout(() => moonAzimuthEl.classList.remove('updated'), 500);
+            }
+            if (moonAltitudeEl.textContent !== moonAltText) {
+                moonAltitudeEl.classList.add('updated');
+                setTimeout(() => moonAltitudeEl.classList.remove('updated'), 500);
+            }
+            
+            moonAzimuthEl.textContent = moonAzText;
+            moonAltitudeEl.textContent = moonAltText;
+
+            // Update the Three.js moon marker position
+            updateMoonMarkerPosition();
+        }
+
+        // Create moon marker sprite for Three.js scene
+        function createMoonMarkerSprite() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const size = 128;
+            canvas.width = size;
+            canvas.height = size;
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const glowRadius = size / 2;
+            const moonRadius = size / 3.5;
+
+            // Clear with transparent background
+            context.clearRect(0, 0, size, size);
+
+            // Get moon phase for styling
+            const moonIllumination = SunCalc.getMoonIllumination(selectedDateTime);
+            const phase = moonIllumination.phase; // 0 = new moon, 0.5 = full moon, 1 = new moon again
+
+            // Draw moon glow (outer) - softer, more ethereal than sun
+            const glowGradient = context.createRadialGradient(
+                centerX, centerY, moonRadius * 0.3,
+                centerX, centerY, glowRadius
+            );
+            glowGradient.addColorStop(0, 'rgba(230, 230, 250, 0.5)');
+            glowGradient.addColorStop(0.4, 'rgba(200, 200, 255, 0.3)');
+            glowGradient.addColorStop(0.7, 'rgba(180, 180, 240, 0.15)');
+            glowGradient.addColorStop(1, 'rgba(150, 150, 220, 0)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+            context.fillStyle = glowGradient;
+            context.fill();
+
+            // Draw moon circle (main marker) with phase
+            if (phase < 0.25 || phase > 0.75) {
+                // New moon to crescent or waning crescent - draw crescent shape
+                const crescentOffset = (phase < 0.25) ? 
+                    (0.25 - phase) * 2 : // Waxing crescent
+                    (phase - 0.75) * 2;  // Waning crescent
+                
+                // Draw main moon circle
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(220, 220, 240, 0.95)';
+                context.fill();
+
+                // Draw shadow to create crescent effect
+                const shadowOffset = moonRadius * 0.7 * crescentOffset;
+                context.beginPath();
+                context.arc(centerX - shadowOffset, centerY, moonRadius * 1.1, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(30, 30, 50, 0.9)';
+                context.fill();
+            } else if (phase < 0.35 || phase > 0.65) {
+                // Gibbous phase - mostly full with slight shadow
+                const shadowAmount = (phase < 0.5) ? 
+                    (phase - 0.25) * 2 : // Waxing gibbous
+                    (0.75 - phase) * 2;  // Waning gibbous
+                
+                // Draw main moon circle
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(230, 230, 250, 0.95)';
+                context.fill();
+
+                // Draw subtle shadow
+                const shadowOffset = moonRadius * 0.4 * (1 - shadowAmount);
+                context.beginPath();
+                context.arc(centerX - shadowOffset, centerY, moonRadius * 1.05, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(50, 50, 80, 0.6)';
+                context.fill();
+            } else {
+                // Full moon or near-full - draw full circle with subtle glow
+                context.beginPath();
+                context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+                const fullMoonGradient = context.createRadialGradient(
+                    centerX, centerY, moonRadius * 0.3,
+                    centerX, centerY, moonRadius
+                );
+                fullMoonGradient.addColorStop(0, 'rgba(250, 250, 255, 0.98)');
+                fullMoonGradient.addColorStop(0.7, 'rgba(230, 230, 250, 0.95)');
+                fullMoonGradient.addColorStop(1, 'rgba(210, 210, 240, 0.9)');
+                context.fillStyle = fullMoonGradient;
+                context.fill();
+
+                // Add subtle craters/texture
+                context.fillStyle = 'rgba(200, 200, 230, 0.3)';
+                context.beginPath();
+                context.arc(centerX - moonRadius * 0.3, centerY - moonRadius * 0.2, moonRadius * 0.15, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(centerX + moonRadius * 0.25, centerY + moonRadius * 0.3, moonRadius * 0.12, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(centerX - moonRadius * 0.1, centerY + moonRadius * 0.15, moonRadius * 0.1, 0, Math.PI * 2);
+                context.fill();
+            }
+
+            // Draw moon outline - softer than sun
+            context.beginPath();
+            context.arc(centerX, centerY, moonRadius, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(200, 200, 255, 0.7)';
+            context.lineWidth = 2.5;
+            context.stroke();
+
+            // Add inner highlight for depth
+            context.beginPath();
+            context.arc(centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, moonRadius * 0.3, 0, Math.PI * 2);
+            const highlightGradient = context.createRadialGradient(
+                centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, 0,
+                centerX - moonRadius * 0.2, centerY - moonRadius * 0.2, moonRadius * 0.3
+            );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            context.fillStyle = highlightGradient;
+            context.fill();
+
+            // Create sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(55, 55, 1); // Slightly smaller than sun
+
+            return sprite;
+        }
+
+        // Update moon marker position in the Three.js scene
+        function updateMoonMarkerPosition() {
+            if (!moonMarker || !gridGroup) return;
+
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                moonMarker.visible = false;
+                return;
+            }
+
+            moonMarker.visible = true;
+
+            // Same SPHERE_RADIUS as the grid
+            const SPHERE_RADIUS = 500;
+
+            // Convert moon azimuth and altitude to 3D position
+            // Using the same coordinate system as the grid:
+            // Azimuth: 0 = North = -Z, 90 = East = +X
+            // Altitude: angle above/below horizon
+            const azRad = degToRad(moonAzimuthDeg);
+            const altRad = degToRad(moonAltitudeDeg);
+
+            // Calculate position on the celestial sphere
+            const r = SPHERE_RADIUS * Math.cos(altRad);
+            const y = SPHERE_RADIUS * Math.sin(altRad);
+            const x = Math.sin(azRad) * r;
+            const z = -Math.cos(azRad) * r;
+
+            moonMarker.position.set(x, y, z);
+        }
+
         // Create anti-solar point marker sprite
         function createAntiSolarMarkerSprite() {
             const canvas = document.createElement('canvas');
@@ -2299,6 +2535,10 @@
             sunMarker = createSunMarkerSprite();
             gridGroup.add(sunMarker);
 
+            // Create and add moon marker to the grid
+            moonMarker = createMoonMarkerSprite();
+            gridGroup.add(moonMarker);
+
             // Create and add anti-solar marker
             antiSolarMarker = createAntiSolarMarkerSprite();
             gridGroup.add(antiSolarMarker);
@@ -2454,6 +2694,7 @@
 
                 // Calculate sun position (uses currentHeadingDeg from compass)
                 calculateSunPosition();
+                calculateMoonPosition();
 
                 // Calculate pitch (elevation angle)
                 // direction.y gives vertical component: positive = up, negative = down
@@ -2615,6 +2856,10 @@
                 // Initialize compass offset control
                 initCompassOffset();
 
+                // Initial calculations
+                calculateSunPosition();
+                calculateMoonPosition();
+
                 // Hide start screen and show UI elements
                 startScreen.classList.add('fading-out');
                 setTimeout(() => {
@@ -2693,6 +2938,14 @@
             console.log('Selected datetime:', selectedDateTime);
             // Recalculate sun position for new time
             calculateSunPosition();
+            calculateMoonPosition();
+            // Update moon sprite to reflect new phase
+            if (moonMarker && gridGroup) {
+                gridGroup.remove(moonMarker);
+                moonMarker = createMoonMarkerSprite();
+                gridGroup.add(moonMarker);
+                updateMoonMarkerPosition();
+            }
         });
 
         // Time scrubber - swipe directly on datetime picker
@@ -2739,6 +2992,14 @@
 
                 // Recalculate sun position
                 calculateSunPosition();
+                calculateMoonPosition();
+                // Update moon sprite to reflect new phase
+                if (moonMarker && gridGroup) {
+                    gridGroup.remove(moonMarker);
+                    moonMarker = createMoonMarkerSprite();
+                    gridGroup.add(moonMarker);
+                    updateMoonMarkerPosition();
+                }
             }
 
             function endScrub() {
@@ -2931,6 +3192,7 @@
             useManualGPS = true;
             updateGPSDisplay();
             calculateSunPosition();
+            calculateMoonPosition();
             triggerHaptic('success');
             gpsModal.classList.remove('visible');
         });
@@ -2943,6 +3205,7 @@
             manualLon = null;
             updateGPSDisplay();
             calculateSunPosition();
+            calculateMoonPosition();
             gpsModal.classList.remove('visible');
         });
 
