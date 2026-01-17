@@ -1206,7 +1206,7 @@
     <div id="offset-input-modal">
         <div id="offset-input-content">
             <label for="offset-input">Compass Offset (°)</label>
-            <input type="number" id="offset-input" min="-180" max="180" step="1" value="0">
+            <input type="number" id="offset-input" min="-360" max="360" step="1" value="0">
             <div class="offset-input-buttons">
                 <button class="offset-input-btn" id="offset-cancel-btn">Cancel</button>
                 <button class="offset-input-btn" id="offset-apply-btn">Apply</button>
@@ -1452,6 +1452,16 @@
             if (!gridGroup) return;
             // Rotate the entire grid around Y axis by the compass offset
             gridGroup.rotation.y = degToRad(-compassOffset);
+        }
+
+        // Update compass offset UI (thumb position and value display)
+        function updateCompassUI() {
+            const maxOffset = 30;
+            // Clamp thumb position to slider range, but allow larger values
+            const clampedOffset = Math.max(-maxOffset, Math.min(maxOffset, compassOffset));
+            const percent = ((clampedOffset + maxOffset) / (maxOffset * 2)) * 100;
+            compassOffsetThumb.style.left = `${percent}%`;
+            compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
         }
 
         // Show error message
@@ -2613,10 +2623,16 @@
             }
 
             // Capture start heading when three.js has just initialized
+            // This heading represents the offset between three.js north and true north
             if (needsCaptureStartHdg && hasCompassHeading) {
                 startHeadingDeg = targetHeadingDeg;
                 startHdgEl.textContent = Math.round(startHeadingDeg) + '°';
                 needsCaptureStartHdg = false;
+
+                // Apply start heading as compass offset to align three.js north with true north
+                compassOffset = Math.round(startHeadingDeg);
+                applyCompassOffset();
+                updateCompassUI();
             }
         }
 
@@ -3071,13 +3087,9 @@
         // Offset input modal handlers
         offsetApplyBtn.addEventListener('click', () => {
             const value = parseInt(offsetInput.value);
-            if (!isNaN(value) && value >= -180 && value <= 180) {
+            if (!isNaN(value) && value >= -360 && value <= 360) {
                 compassOffset = value;
-                // Update thumb position
-                const maxOffset = 30;
-                const percent = ((Math.max(-30, Math.min(30, compassOffset)) + maxOffset) / (maxOffset * 2)) * 100;
-                compassOffsetThumb.style.left = `${percent}%`;
-                compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
+                updateCompassUI();
                 applyCompassOffset();
                 triggerHaptic('success');
             } else {
