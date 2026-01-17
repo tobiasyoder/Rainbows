@@ -2629,8 +2629,10 @@
                 startHdgEl.textContent = Math.round(startHeadingDeg) + '°';
                 needsCaptureStartHdg = false;
 
-                // Apply start heading as compass offset to align three.js north with true north
-                compassOffset = Math.round(startHeadingDeg);
+                // Apply negated start heading as compass offset to align three.js north with true north
+                // Three.js thinks we're facing "north", but we're actually facing startHeadingDeg
+                // So we rotate the grid by -startHeadingDeg to compensate
+                compassOffset = -Math.round(startHeadingDeg);
                 applyCompassOffset();
                 updateCompassUI();
             }
