@@ -612,7 +612,7 @@
             horizonCtx.scale(dpr, dpr);
         }
 
-        // Draw the horizon line and crosshairs
+        // Draw crosshairs and sun marker
         function drawHorizon() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -623,37 +623,6 @@
             // Center of the canvas
             const centerX = width / 2;
             const centerY = height / 2;
-
-            // Calculate vertical offset based on pitch
-            // Pitch up (positive) = looking above horizon = line moves down
-            // Pitch down (negative) = looking below horizon = line moves up
-            const pitchDeg = radToDeg(currentPitchRad);
-            const pixelsPerDegree = height / VERTICAL_FOV;
-            const verticalOffset = pitchDeg * pixelsPerDegree;
-
-            // Line length - extend well beyond viewport for rotation
-            const lineLength = Math.max(width, height) * 2;
-
-            // Save context state
-            horizonCtx.save();
-
-            // Move to center, apply vertical offset, then rotate
-            // Negate roll: when phone tilts right, horizon in viewfinder tilts left
-            horizonCtx.translate(centerX, centerY + verticalOffset);
-            horizonCtx.rotate(-currentRollRad);
-
-            // Draw the horizon line
-            horizonCtx.beginPath();
-            horizonCtx.moveTo(-lineLength, 0);
-            horizonCtx.lineTo(lineLength, 0);
-
-            // Style: white, 50% opacity, 2px thick
-            horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            horizonCtx.lineWidth = 2;
-            horizonCtx.stroke();
-
-            // Restore context state
-            horizonCtx.restore();
 
             // Draw crosshairs at screen center (not affected by orientation)
             horizonCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
