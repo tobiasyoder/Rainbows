@@ -1098,6 +1098,10 @@
                 </div>
                 <div class="section-content" id="content-orientation">
                     <div class="row">
+                        <span class="label">Start HDG</span>
+                        <span class="value" id="start-heading">--°</span>
+                    </div>
+                    <div class="row">
                         <span class="label">HDG</span>
                         <span class="value" id="heading">--°</span>
                     </div>
@@ -1276,6 +1280,7 @@
         // Debug value elements
         const latEl = document.getElementById('lat');
         const lonEl = document.getElementById('lon');
+        const startHdgEl = document.getElementById('start-heading');
         const headingEl = document.getElementById('heading');
         const pitchEl = document.getElementById('pitch');
         const rollEl = document.getElementById('roll');
@@ -1409,6 +1414,10 @@
         let targetHeadingDeg = 0;  // Raw compass reading, smoothed into currentHeadingDeg
         let hasCompassHeading = false;
         const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
+
+        // Start heading - captured when three.js initializes its orientation
+        let startHeadingDeg = null;
+        let needsCaptureStartHdg = false;  // Flag to capture next compass reading as start heading
 
         // Toggle entire panel
         function togglePanel() {
@@ -1779,6 +1788,11 @@
 
             // Create DeviceOrientationControls
             orientationControls = new THREE.DeviceOrientationControls(threeCamera);
+
+            // Reset start heading - will be captured from next compass reading
+            startHeadingDeg = null;
+            needsCaptureStartHdg = true;
+            startHdgEl.textContent = '--°';
 
             // Initialize the grid overlay
             initGridOverlay();
@@ -2597,6 +2611,13 @@
                 targetHeadingDeg = normalizeAngle(360 - event.alpha);
                 hasCompassHeading = true;
             }
+
+            // Capture start heading when three.js has just initialized
+            if (needsCaptureStartHdg && hasCompassHeading) {
+                startHeadingDeg = targetHeadingDeg;
+                startHdgEl.textContent = Math.round(startHeadingDeg) + '°';
+                needsCaptureStartHdg = false;
+            }
         }
 
         // Start listening for compass heading
@@ -2704,6 +2725,10 @@
                     videoElement.play();
                 }
                 if (orientationControls && !animationId) {
+                    // Reset start heading - three.js resets orientation on visibility change
+                    startHeadingDeg = null;
+                    needsCaptureStartHdg = true;
+                    startHdgEl.textContent = '--°';
                     updateOrientation();
                 }
             }
