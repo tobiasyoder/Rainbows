@@ -347,7 +347,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.5.0</div>
+        <div id="version">v2.6.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -356,7 +356,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.5.0</div>
+        <div class="version-line">v2.6.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -412,7 +412,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.5.0';
+        const VERSION = 'v2.6.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -497,6 +497,10 @@
         let targetHeadingDeg = 0;  // Raw compass reading, smoothed into currentHeadingDeg
         let hasCompassHeading = false;
         const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
+
+        // North calibration - aligns grid to true cardinal north
+        // This offset is applied once when we first get a compass reading
+        let isNorthCalibrated = false;
 
         // Show error message
         function showError(msg) {
@@ -1124,6 +1128,30 @@
                 // Get camera's world direction (where it's pointing)
                 const direction = new THREE.Vector3();
                 threeCamera.getWorldDirection(direction);
+
+                // NORTH CALIBRATION: Align grid to true cardinal north
+                // This runs once when we first get a compass heading
+                // It calculates the offset between Three.js reference frame and true north,
+                // then applies this as a Y-axis rotation to the grid
+                if (hasCompassHeading && !isNorthCalibrated && gridGroup) {
+                    // Get the Three.js relative heading (arbitrary reference frame)
+                    const threeJSHeading = normalizeAngle(radToDeg(Math.atan2(direction.x, -direction.z)));
+
+                    // Calculate offset: how much to rotate grid so North aligns with true north
+                    // If compass says we're facing 90° (East), and Three.js says camera is at 0°,
+                    // we need to rotate the grid by 90° so that when camera looks at 0°,
+                    // the grid shows East (90°), not North (0°)
+                    const northOffset = normalizeAngle(targetHeadingDeg - threeJSHeading);
+
+                    // Apply the offset as Y-axis rotation to the grid group
+                    // This rotates the entire celestial grid (including sun marker) to align with true north
+                    gridGroup.rotation.y = degToRad(northOffset);
+
+                    isNorthCalibrated = true;
+                    console.log('North calibrated. Three.js heading:', threeJSHeading.toFixed(1),
+                                '°, Compass heading:', targetHeadingDeg.toFixed(1),
+                                '°, Offset applied:', northOffset.toFixed(1), '°');
+                }
 
                 // Calculate heading (compass direction)
                 // Only use Three.js heading as fallback if we don't have true compass heading
