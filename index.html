@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AR Photography Planner</title>
+    <title>Rainbows - AR Photography Planner</title>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -69,12 +69,26 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #0f0f1a 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
+            overflow: hidden;
+        }
+
+        #start-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(255, 100, 100, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(100, 100, 255, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(255, 200, 100, 0.05) 0%, transparent 60%);
+            pointer-events: none;
         }
 
         #version {
@@ -82,16 +96,47 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
             font-family: 'Courier New', Courier, monospace;
         }
 
         #app-title {
-            color: white;
-            font-size: 24px;
-            margin-bottom: 40px;
+            font-size: 52px;
+            font-weight: 300;
+            margin-bottom: 12px;
             text-align: center;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #ff9ff3 75%, #ff6b6b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 8s ease infinite;
+        }
+
+        @keyframes rainbow-shift {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 200% center; }
+        }
+
+        #app-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-bottom: 50px;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        #author-credit {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            letter-spacing: 1px;
         }
 
         #start-btn {
@@ -374,57 +419,236 @@
 
         .datetime-wrapper {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 8px;
-        }
-
-        #datetime-picker {
+            gap: 0;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 14px;
-            padding: 12px 18px;
-            font-size: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            border-radius: 16px;
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            overflow: hidden;
         }
 
-        #time-scrubber {
+        .scrub-arrow {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            padding: 8px 16px;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            justify-content: center;
+            width: 36px;
+            height: 44px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        #datetime-picker {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 12px 8px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
             touch-action: pan-x;
             cursor: ew-resize;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        #time-scrubber .scrub-icon {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
+        #datetime-picker:focus {
+            outline: none;
         }
 
-        #time-scrubber .scrub-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 12px;
+        .datetime-wrapper.scrubbing {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .datetime-wrapper.scrubbing .scrub-arrow {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Info button */
+        #info-btn {
+            position: fixed;
+            top: env(safe-area-inset-top, 10px);
+            right: 60px;
+            margin-top: 10px;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            font-size: 16px;
             font-weight: 500;
-            min-width: 100px;
+            font-style: italic;
+            font-family: Georgia, serif;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 50;
+            display: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #info-btn:active {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+        }
+
+        /* Info Modal */
+        #info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 150;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #info-modal.visible {
+            display: flex;
+        }
+
+        #info-modal-content {
+            background: linear-gradient(135deg, rgba(40, 40, 50, 0.9) 0%, rgba(20, 20, 30, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 28px;
+            width: 90%;
+            max-width: 320px;
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        #info-modal h3 {
+            color: white;
+            margin: 0 0 16px 0;
+            font-size: 20px;
+            font-weight: 600;
             text-align: center;
         }
 
-        #time-scrubber.active {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
-            border-color: rgba(255, 255, 255, 0.3);
+        #info-modal p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 16px 0;
+            text-align: center;
+        }
+
+        #info-modal .info-close {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        /* Compass offset input modal */
+        #offset-input-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 160;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #offset-input-modal.visible {
+            display: flex;
+        }
+
+        #offset-input-content {
+            background: linear-gradient(135deg, rgba(40, 40, 50, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            width: 200px;
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #offset-input-content label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        #offset-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: #00ff00;
+            font-size: 18px;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        #offset-input:focus {
+            outline: none;
+            border-color: rgba(0, 255, 0, 0.5);
+        }
+
+        .offset-input-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .offset-input-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        #offset-apply-btn {
+            background: linear-gradient(135deg, #007AFF 0%, #0056b3 100%);
+            color: white;
+        }
+
+        #offset-cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Clickable offset value */
+        #compass-offset-value {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        #compass-offset-value:active {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* GPS Edit Button */
@@ -582,12 +806,14 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v3.0.0</div>
-        <div id="app-title">AR Photography Planner</div>
+        <div id="version">v3.1.0</div>
+        <div id="app-title">Rainbows</div>
+        <div id="app-subtitle">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
             Requires camera, location, and motion sensor access
         </div>
+        <div id="author-credit">Tobias Yoder</div>
     </div>
 
     <div id="debug-overlay">
@@ -598,7 +824,7 @@
         </div>
 
         <div class="panel-content" id="panel-content">
-            <div class="version-line">v3.0.0</div>
+            <div class="version-line">v3.1.0</div>
 
             <!-- Location Section -->
             <div class="section" data-section="location">
@@ -703,14 +929,32 @@
     </div>
 
     <button id="gps-edit-btn">Edit GPS</button>
+    <button id="info-btn">i</button>
 
     <div id="datetime-container">
-        <div class="datetime-wrapper">
+        <div class="datetime-wrapper" id="datetime-wrapper">
+            <span class="scrub-arrow">◀</span>
             <input type="datetime-local" id="datetime-picker">
-            <div id="time-scrubber">
-                <span class="scrub-icon">◀</span>
-                <span class="scrub-label" id="scrub-label">Swipe to scrub</span>
-                <span class="scrub-icon">▶</span>
+            <span class="scrub-arrow">▶</span>
+        </div>
+    </div>
+
+    <div id="info-modal">
+        <div id="info-modal-content">
+            <h3>Rainbows</h3>
+            <p>Plan your rainbow photography by visualizing where rainbows will appear based on the sun's position.</p>
+            <p>The rainbow arc appears opposite the sun at 42° from the anti-solar point. Swipe the date/time to see how it changes throughout the day.</p>
+            <button class="info-close" id="info-close">Got it</button>
+        </div>
+    </div>
+
+    <div id="offset-input-modal">
+        <div id="offset-input-content">
+            <label for="offset-input">Compass Offset (°)</label>
+            <input type="number" id="offset-input" min="-180" max="180" step="1" value="0">
+            <div class="offset-input-buttons">
+                <button class="offset-input-btn" id="offset-cancel-btn">Cancel</button>
+                <button class="offset-input-btn" id="offset-apply-btn">Apply</button>
             </div>
         </div>
     </div>
@@ -733,7 +977,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v3.0.0';
+        const VERSION = 'v3.1.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -763,11 +1007,21 @@
         const gpsDeviceBtn = document.getElementById('gps-device-btn');
         const gpsCancelBtn = document.getElementById('gps-cancel-btn');
 
-        // DateTime picker and time scrubber
+        // DateTime picker (now directly swipeable)
         const datetimeContainer = document.getElementById('datetime-container');
         const datetimePicker = document.getElementById('datetime-picker');
-        const timeScrubber = document.getElementById('time-scrubber');
-        const scrubLabel = document.getElementById('scrub-label');
+        const datetimeWrapper = document.getElementById('datetime-wrapper');
+
+        // Info button and modal
+        const infoBtn = document.getElementById('info-btn');
+        const infoModal = document.getElementById('info-modal');
+        const infoClose = document.getElementById('info-close');
+
+        // Offset input modal
+        const offsetInputModal = document.getElementById('offset-input-modal');
+        const offsetInput = document.getElementById('offset-input');
+        const offsetApplyBtn = document.getElementById('offset-apply-btn');
+        const offsetCancelBtn = document.getElementById('offset-cancel-btn');
 
         // Compass offset controls (now inside debug panel)
         const compassOffsetSlider = document.getElementById('compass-offset-slider');
@@ -1968,6 +2222,7 @@
                 startScreen.classList.add('hidden');
                 debugOverlay.style.display = 'block';
                 gpsEditBtn.style.display = 'block';
+                infoBtn.style.display = 'block';
                 datetimeContainer.style.display = 'block';
             } else {
                 // Camera failed - allow retry
@@ -2039,7 +2294,7 @@
             calculateSunPosition();
         });
 
-        // Time scrubber touch/mouse events
+        // Time scrubber - swipe directly on datetime picker
         function initTimeScrubber() {
             let scrubStartX = 0;
             let scrubStartTime = null;
@@ -2049,35 +2304,21 @@
                 isScrubbing = true;
                 scrubStartX = clientX;
                 scrubStartTime = new Date(selectedDateTime.getTime());
-                timeScrubber.classList.add('active');
+                datetimeWrapper.classList.add('scrubbing');
             }
 
             function moveScrub(clientX) {
                 if (!isScrubbing) return;
 
                 const deltaX = clientX - scrubStartX;
-                // 100 pixels = 1 hour, adjust sensitivity as needed
-                const minutesDelta = Math.round(deltaX / 2); // 2 pixels per minute
+                // 2 pixels per minute
+                const minutesDelta = Math.round(deltaX / 2);
 
                 const newTime = new Date(scrubStartTime.getTime() + minutesDelta * 60000);
                 selectedDateTime = newTime;
 
                 // Update the datetime picker display
                 updateDateTimePickerDisplay();
-
-                // Update scrub label to show relative change
-                const hours = Math.floor(Math.abs(minutesDelta) / 60);
-                const mins = Math.abs(minutesDelta) % 60;
-                const sign = minutesDelta >= 0 ? '+' : '-';
-                if (Math.abs(minutesDelta) > 0) {
-                    if (hours > 0) {
-                        scrubLabel.textContent = `${sign}${hours}h ${mins}m`;
-                    } else {
-                        scrubLabel.textContent = `${sign}${mins}m`;
-                    }
-                } else {
-                    scrubLabel.textContent = 'Swipe to scrub';
-                }
 
                 // Recalculate sun position
                 calculateSunPosition();
@@ -2086,26 +2327,26 @@
             function endScrub() {
                 if (!isScrubbing) return;
                 isScrubbing = false;
-                timeScrubber.classList.remove('active');
-                scrubLabel.textContent = 'Swipe to scrub';
+                datetimeWrapper.classList.remove('scrubbing');
             }
 
-            // Touch events
-            timeScrubber.addEventListener('touchstart', (e) => {
+            // Touch events on the datetime picker itself
+            datetimePicker.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 startScrub(e.touches[0].clientX);
             }, { passive: false });
 
-            timeScrubber.addEventListener('touchmove', (e) => {
+            datetimePicker.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 moveScrub(e.touches[0].clientX);
             }, { passive: false });
 
-            timeScrubber.addEventListener('touchend', endScrub);
-            timeScrubber.addEventListener('touchcancel', endScrub);
+            datetimePicker.addEventListener('touchend', endScrub);
+            datetimePicker.addEventListener('touchcancel', endScrub);
 
             // Mouse events for desktop testing
-            timeScrubber.addEventListener('mousedown', (e) => {
+            datetimePicker.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 startScrub(e.clientX);
             });
 
@@ -2264,6 +2505,64 @@
         gpsModal.addEventListener('click', (e) => {
             if (e.target === gpsModal) {
                 gpsModal.classList.remove('visible');
+            }
+        });
+
+        // Info button and modal handlers
+        infoBtn.addEventListener('click', () => {
+            infoModal.classList.add('visible');
+        });
+
+        infoClose.addEventListener('click', () => {
+            infoModal.classList.remove('visible');
+        });
+
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) {
+                infoModal.classList.remove('visible');
+            }
+        });
+
+        // Compass offset value click handler (opens input modal)
+        compassOffsetValue.addEventListener('click', (e) => {
+            e.stopPropagation();
+            offsetInput.value = compassOffset;
+            offsetInputModal.classList.add('visible');
+            offsetInput.focus();
+            offsetInput.select();
+        });
+
+        // Offset input modal handlers
+        offsetApplyBtn.addEventListener('click', () => {
+            const value = parseInt(offsetInput.value);
+            if (!isNaN(value) && value >= -180 && value <= 180) {
+                compassOffset = value;
+                // Update thumb position
+                const maxOffset = 30;
+                const percent = ((Math.max(-30, Math.min(30, compassOffset)) + maxOffset) / (maxOffset * 2)) * 100;
+                compassOffsetThumb.style.left = `${percent}%`;
+                compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
+                applyCompassOffset();
+            }
+            offsetInputModal.classList.remove('visible');
+        });
+
+        offsetCancelBtn.addEventListener('click', () => {
+            offsetInputModal.classList.remove('visible');
+        });
+
+        offsetInputModal.addEventListener('click', (e) => {
+            if (e.target === offsetInputModal) {
+                offsetInputModal.classList.remove('visible');
+            }
+        });
+
+        // Handle Enter key in offset input
+        offsetInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                offsetApplyBtn.click();
+            } else if (e.key === 'Escape') {
+                offsetInputModal.classList.remove('visible');
             }
         });
     </script>
