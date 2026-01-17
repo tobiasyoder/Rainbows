@@ -195,7 +195,7 @@
             position: fixed;
             top: env(safe-area-inset-top, 10px);
             left: 10px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%);
             border: 1px solid rgba(255, 255, 255, 0.18);
             color: #00ff00;
             padding: 0;
@@ -208,9 +208,10 @@
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             margin-top: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             min-width: 160px;
             overflow: hidden;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.5);
         }
 
         #debug-overlay .panel-header {
@@ -218,7 +219,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 10px 14px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.2) 100%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             user-select: none;
@@ -472,7 +473,7 @@
         #info-btn {
             position: fixed;
             top: env(safe-area-inset-top, 10px);
-            right: 60px;
+            right: 110px;
             margin-top: 10px;
             width: 36px;
             height: 36px;
@@ -806,7 +807,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v3.1.0</div>
+        <div id="version">v3.2.0</div>
         <div id="app-title">Rainbows</div>
         <div id="app-subtitle">AR Photography Planner</div>
         <button id="start-btn">Start</button>
@@ -824,7 +825,7 @@
         </div>
 
         <div class="panel-content" id="panel-content">
-            <div class="version-line">v3.1.0</div>
+            <div class="version-line">v3.2.0</div>
 
             <!-- Location Section -->
             <div class="section" data-section="location">
@@ -977,7 +978,42 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v3.1.0';
+        const VERSION = 'v3.2.0';
+
+        // Haptic feedback utility
+        // Provides tactile feedback for UI interactions
+        function triggerHaptic(intensity = 'medium') {
+            // Try iOS haptic feedback first (WebKit)
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic) {
+                try {
+                    window.webkit.messageHandlers.haptic.postMessage(intensity);
+                    return;
+                } catch (e) {}
+            }
+
+            // Try Vibration API (Android and some browsers)
+            if (navigator.vibrate) {
+                switch (intensity) {
+                    case 'light':
+                        navigator.vibrate(10);
+                        break;
+                    case 'medium':
+                        navigator.vibrate(25);
+                        break;
+                    case 'heavy':
+                        navigator.vibrate(50);
+                        break;
+                    case 'success':
+                        navigator.vibrate([20, 50, 20]);
+                        break;
+                    case 'error':
+                        navigator.vibrate([50, 30, 50, 30, 50]);
+                        break;
+                    default:
+                        navigator.vibrate(25);
+                }
+            }
+        }
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -1115,6 +1151,7 @@
 
         // Toggle entire panel
         function togglePanel() {
+            triggerHaptic('light');
             panelCollapsed = !panelCollapsed;
             if (panelCollapsed) {
                 panelContent.classList.add('collapsed');
@@ -1127,6 +1164,7 @@
 
         // Toggle collapsible section
         function toggleSection(section) {
+            triggerHaptic('light');
             sectionStates[section] = !sectionStates[section];
             const content = document.getElementById(`content-${section}`);
             const toggle = document.getElementById(`toggle-${section}`);
@@ -2184,6 +2222,7 @@
 
         // Main start handler - triggered by user tap
         startBtn.addEventListener('click', async () => {
+            triggerHaptic('medium');
             hideError();
             startBtn.disabled = true;
             startBtn.textContent = 'Starting...';
@@ -2295,22 +2334,38 @@
         });
 
         // Time scrubber - swipe directly on datetime picker
+        // Supports both tapping (opens native picker) and swiping (scrubs time)
         function initTimeScrubber() {
             let scrubStartX = 0;
             let scrubStartTime = null;
             let isScrubbing = false;
+            let touchStartTime = 0;
+            let hasMoved = false;
+            const TAP_THRESHOLD = 10; // pixels - movement less than this is considered a tap
+            const TAP_MAX_DURATION = 300; // ms - tap must be shorter than this
 
             function startScrub(clientX) {
                 isScrubbing = true;
                 scrubStartX = clientX;
                 scrubStartTime = new Date(selectedDateTime.getTime());
-                datetimeWrapper.classList.add('scrubbing');
+                touchStartTime = Date.now();
+                hasMoved = false;
             }
 
             function moveScrub(clientX) {
                 if (!isScrubbing) return;
 
                 const deltaX = clientX - scrubStartX;
+
+                // Only start visual scrubbing feedback after threshold
+                if (Math.abs(deltaX) > TAP_THRESHOLD) {
+                    hasMoved = true;
+                    datetimeWrapper.classList.add('scrubbing');
+                    triggerHaptic('light');
+                }
+
+                if (!hasMoved) return;
+
                 // 2 pixels per minute
                 const minutesDelta = Math.round(deltaX / 2);
 
@@ -2326,18 +2381,44 @@
 
             function endScrub() {
                 if (!isScrubbing) return;
+
+                const touchDuration = Date.now() - touchStartTime;
+                const wasTap = !hasMoved && touchDuration < TAP_MAX_DURATION;
+
                 isScrubbing = false;
                 datetimeWrapper.classList.remove('scrubbing');
+
+                // If it was a tap, trigger the native date picker
+                if (wasTap) {
+                    triggerHaptic('medium');
+                    // Use showPicker if available (modern browsers)
+                    if (datetimePicker.showPicker) {
+                        try {
+                            datetimePicker.showPicker();
+                        } catch (e) {
+                            // Fallback: focus and click
+                            datetimePicker.focus();
+                            datetimePicker.click();
+                        }
+                    } else {
+                        // Fallback for older browsers
+                        datetimePicker.focus();
+                        datetimePicker.click();
+                    }
+                }
             }
 
             // Touch events on the datetime picker itself
             datetimePicker.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+                // Don't prevent default immediately - let the browser handle if it's a tap
                 startScrub(e.touches[0].clientX);
-            }, { passive: false });
+            }, { passive: true });
 
             datetimePicker.addEventListener('touchmove', (e) => {
-                e.preventDefault();
+                // Only prevent default if we're actually scrubbing
+                if (hasMoved) {
+                    e.preventDefault();
+                }
                 moveScrub(e.touches[0].clientX);
             }, { passive: false });
 
@@ -2346,7 +2427,6 @@
 
             // Mouse events for desktop testing
             datetimePicker.addEventListener('mousedown', (e) => {
-                e.preventDefault();
                 startScrub(e.clientX);
             });
 
@@ -2436,6 +2516,7 @@
             // Reset button
             compassOffsetReset.addEventListener('click', (e) => {
                 e.stopPropagation();
+                triggerHaptic('medium');
                 compassOffset = 0;
                 updateThumbPosition();
                 applyCompassOffset();
@@ -2447,6 +2528,7 @@
 
         // Open GPS modal
         gpsEditBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             // Pre-fill with current coordinates
             const gps = getCurrentGPS();
             if (gps.lat !== null) {
@@ -2460,20 +2542,24 @@
 
         // Apply manual GPS
         gpsApplyBtn.addEventListener('click', () => {
+            triggerHaptic('medium');
             const lat = parseFloat(gpsLatInput.value);
             const lon = parseFloat(gpsLonInput.value);
 
             if (isNaN(lat) || isNaN(lon)) {
+                triggerHaptic('error');
                 alert('Please enter valid coordinates');
                 return;
             }
 
             if (lat < -90 || lat > 90) {
+                triggerHaptic('error');
                 alert('Latitude must be between -90 and 90');
                 return;
             }
 
             if (lon < -180 || lon > 180) {
+                triggerHaptic('error');
                 alert('Longitude must be between -180 and 180');
                 return;
             }
@@ -2483,11 +2569,13 @@
             useManualGPS = true;
             updateGPSDisplay();
             calculateSunPosition();
+            triggerHaptic('success');
             gpsModal.classList.remove('visible');
         });
 
         // Revert to device GPS
         gpsDeviceBtn.addEventListener('click', () => {
+            triggerHaptic('medium');
             useManualGPS = false;
             manualLat = null;
             manualLon = null;
@@ -2498,6 +2586,7 @@
 
         // Cancel GPS modal
         gpsCancelBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             gpsModal.classList.remove('visible');
         });
 
@@ -2510,10 +2599,12 @@
 
         // Info button and modal handlers
         infoBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             infoModal.classList.add('visible');
         });
 
         infoClose.addEventListener('click', () => {
+            triggerHaptic('light');
             infoModal.classList.remove('visible');
         });
 
@@ -2526,6 +2617,7 @@
         // Compass offset value click handler (opens input modal)
         compassOffsetValue.addEventListener('click', (e) => {
             e.stopPropagation();
+            triggerHaptic('light');
             offsetInput.value = compassOffset;
             offsetInputModal.classList.add('visible');
             offsetInput.focus();
@@ -2543,11 +2635,15 @@
                 compassOffsetThumb.style.left = `${percent}%`;
                 compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
                 applyCompassOffset();
+                triggerHaptic('success');
+            } else {
+                triggerHaptic('error');
             }
             offsetInputModal.classList.remove('visible');
         });
 
         offsetCancelBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             offsetInputModal.classList.remove('visible');
         });
 
