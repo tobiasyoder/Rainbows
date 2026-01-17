@@ -650,6 +650,8 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 50;
             display: none;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
@@ -658,6 +660,7 @@
         }
 
         #info-btn.visible {
+            display: flex;
             animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
@@ -881,6 +884,8 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 50;
             display: none;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -889,6 +894,7 @@
         }
 
         #zoom-btn.visible {
+            display: flex;
             animation: popIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
@@ -1462,6 +1468,44 @@
                 videoElement.srcObject = stream;
                 // Store video track for zoom control
                 videoTrack = stream.getVideoTracks()[0];
+
+                // Try to enable image stabilization if available
+                if (videoTrack) {
+                    try {
+                        const capabilities = videoTrack.getCapabilities();
+                        const advancedConstraints = [];
+
+                        // Check for standard stabilization modes
+                        if (capabilities.stabilizationMode) {
+                            // Prefer 'cinematic-extended' > 'cinematic' > 'standard' > 'auto'
+                            const modes = capabilities.stabilizationMode;
+                            let preferredMode = null;
+                            if (modes.includes('cinematic-extended')) {
+                                preferredMode = 'cinematic-extended';
+                            } else if (modes.includes('cinematic')) {
+                                preferredMode = 'cinematic';
+                            } else if (modes.includes('standard')) {
+                                preferredMode = 'standard';
+                            } else if (modes.includes('auto')) {
+                                preferredMode = 'auto';
+                            }
+                            if (preferredMode) {
+                                advancedConstraints.push({ stabilizationMode: preferredMode });
+                                console.log('Using stabilization mode:', preferredMode);
+                            }
+                        }
+
+                        // Apply stabilization constraints
+                        if (advancedConstraints.length > 0) {
+                            await videoTrack.applyConstraints({
+                                advanced: advancedConstraints
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Could not enable stabilization:', e.message);
+                    }
+                }
+
                 await videoElement.play();
                 return true;
             } catch (err) {
@@ -1492,16 +1536,41 @@
             // Try to zoom the camera using constraints
             if (videoTrack) {
                 const capabilities = videoTrack.getCapabilities();
+                const advancedConstraints = [];
+
+                // Add zoom constraint if supported
                 if (capabilities.zoom) {
                     const minZoom = capabilities.zoom.min;
                     const maxZoom = capabilities.zoom.max;
                     const clampedZoom = Math.min(Math.max(targetZoom, minZoom), maxZoom);
+                    advancedConstraints.push({ zoom: clampedZoom });
+                }
+
+                // Maintain stabilization while zooming for smoother video
+                if (capabilities.stabilizationMode) {
+                    const modes = capabilities.stabilizationMode;
+                    let preferredMode = null;
+                    if (modes.includes('cinematic-extended')) {
+                        preferredMode = 'cinematic-extended';
+                    } else if (modes.includes('cinematic')) {
+                        preferredMode = 'cinematic';
+                    } else if (modes.includes('standard')) {
+                        preferredMode = 'standard';
+                    } else if (modes.includes('auto')) {
+                        preferredMode = 'auto';
+                    }
+                    if (preferredMode) {
+                        advancedConstraints.push({ stabilizationMode: preferredMode });
+                    }
+                }
+
+                if (advancedConstraints.length > 0) {
                     try {
                         await videoTrack.applyConstraints({
-                            advanced: [{ zoom: clampedZoom }]
+                            advanced: advancedConstraints
                         });
                     } catch (e) {
-                        console.log('Camera zoom not supported, using CSS transform');
+                        console.log('Camera constraints failed, using CSS transform:', e.message);
                         // Fallback: use CSS transform on video
                         videoElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
                         videoElement.style.transform = isZoomed ? `scale(${ZOOM_LEVEL})` : 'scale(1)';
