@@ -347,7 +347,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v2.4.0</div>
+        <div id="version">v2.5.0</div>
         <div id="app-title">AR Photography Planner</div>
         <button id="start-btn">Start</button>
         <div id="permission-note">
@@ -356,7 +356,7 @@
     </div>
 
     <div id="debug-overlay">
-        <div class="version-line">v2.4.0</div>
+        <div class="version-line">v2.5.0</div>
         <div class="row">
             <span class="label">LAT</span>
             <span class="value" id="lat">--</span>
@@ -412,7 +412,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v2.4.0';
+        const VERSION = 'v2.5.0';
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
@@ -454,6 +454,7 @@
         let gridRenderer = null;
         let gridCamera = null;
         let gridGroup = null;
+        let sunMarker = null;  // Three.js sun marker sprite
 
         // Horizon canvas
         const horizonCanvas = document.getElementById('horizon-canvas');
@@ -485,10 +486,6 @@
         // Crosshairs size
         const CROSSHAIR_SIZE = 20;
         const CROSSHAIR_GAP = 6;
-
-        // Sun marker settings
-        const SUN_MARKER_RADIUS = 20;
-        const SUN_GLOW_RADIUS = 30;
 
         // Sun position (degrees, from north, 0-360 for azimuth, -90 to 90 for altitude)
         let sunAzimuthDeg = 0;
@@ -612,7 +609,7 @@
             horizonCtx.scale(dpr, dpr);
         }
 
-        // Draw crosshairs and sun marker
+        // Draw crosshairs (sun marker is now rendered via Three.js grid)
         function drawHorizon() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -642,9 +639,6 @@
             horizonCtx.lineTo(centerX, centerY + CROSSHAIR_SIZE);
 
             horizonCtx.stroke();
-
-            // Draw sun marker
-            drawSunMarker();
         }
 
         // Calculate sun position using SunCalc
@@ -653,6 +647,7 @@
             if (gps.lat === null || gps.lon === null) {
                 sunAzimuthEl.textContent = '--°';
                 sunAltitudeEl.textContent = '--°';
+                updateSunMarkerPosition();  // Hide sun marker when no GPS
                 return;
             }
 
@@ -673,6 +668,9 @@
             // Update debug display
             sunAzimuthEl.textContent = Math.round(sunAzimuthDeg) + '°';
             sunAltitudeEl.textContent = Math.round(sunAltitudeDeg) + '°';
+
+            // Update the Three.js sun marker position
+            updateSunMarkerPosition();
         }
 
         // Calculate angular difference with wraparound handling
@@ -681,76 +679,6 @@
             while (diff > 180) diff -= 360;
             while (diff < -180) diff += 360;
             return diff;
-        }
-
-        // Draw the sun marker on screen
-        function drawSunMarker() {
-            const gps = getCurrentGPS();
-            if (gps.lat === null || gps.lon === null) return;
-
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const centerX = width / 2;
-            const centerY = height / 2;
-
-            // Calculate horizontal FOV correctly using tangent formula
-            // hFOV = 2 * atan(aspectRatio * tan(vFOV/2))
-            const aspectRatio = width / height;
-            const horizontalFOV = calculateHorizontalFOV(VERTICAL_FOV, aspectRatio);
-
-            // Calculate angular difference between sun and camera direction
-            const deltaAzimuth = angleDifference(sunAzimuthDeg, currentHeadingDeg);
-            const deltaPitch = sunAltitudeDeg - radToDeg(currentPitchRad);
-
-            // Convert angular difference to screen coordinates
-            // x: positive deltaAzimuth = sun is to the right
-            // y: positive deltaPitch = sun is above camera direction
-            let sunX = centerX + (deltaAzimuth / horizontalFOV) * width;
-            let sunY = centerY - (deltaPitch / VERTICAL_FOV) * height;
-
-            // Apply roll rotation around screen center
-            if (currentRollRad !== 0) {
-                const dx = sunX - centerX;
-                const dy = sunY - centerY;
-                const cos = Math.cos(-currentRollRad);
-                const sin = Math.sin(-currentRollRad);
-                sunX = centerX + dx * cos - dy * sin;
-                sunY = centerY + dx * sin + dy * cos;
-            }
-
-            // Check if sun is reasonably on screen (within 2x viewport)
-            const margin = Math.max(width, height);
-            if (sunX < -margin || sunX > width + margin ||
-                sunY < -margin || sunY > height + margin) {
-                return; // Sun is too far off screen
-            }
-
-            // Draw sun glow (outer)
-            const gradient = horizonCtx.createRadialGradient(
-                sunX, sunY, SUN_MARKER_RADIUS * 0.5,
-                sunX, sunY, SUN_GLOW_RADIUS
-            );
-            gradient.addColorStop(0, 'rgba(255, 200, 50, 0.6)');
-            gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
-
-            horizonCtx.beginPath();
-            horizonCtx.arc(sunX, sunY, SUN_GLOW_RADIUS, 0, Math.PI * 2);
-            horizonCtx.fillStyle = gradient;
-            horizonCtx.fill();
-
-            // Draw sun circle (main marker)
-            horizonCtx.beginPath();
-            horizonCtx.arc(sunX, sunY, SUN_MARKER_RADIUS, 0, Math.PI * 2);
-            horizonCtx.fillStyle = 'rgba(255, 220, 50, 0.9)';
-            horizonCtx.fill();
-
-            // Draw sun outline
-            horizonCtx.beginPath();
-            horizonCtx.arc(sunX, sunY, SUN_MARKER_RADIUS, 0, Math.PI * 2);
-            horizonCtx.strokeStyle = 'rgba(255, 150, 0, 0.8)';
-            horizonCtx.lineWidth = 2;
-            horizonCtx.stroke();
         }
 
         // Initialize Three.js camera and DeviceOrientationControls
@@ -836,6 +764,98 @@
             sprite.scale.set(40, 20, 1);
 
             return sprite;
+        }
+
+        // Create sun marker sprite for Three.js scene
+        function createSunMarkerSprite() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const size = 128;
+            canvas.width = size;
+            canvas.height = size;
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const glowRadius = size / 2;
+            const sunRadius = size / 3;
+
+            // Clear with transparent background
+            context.clearRect(0, 0, size, size);
+
+            // Draw sun glow (outer)
+            const gradient = context.createRadialGradient(
+                centerX, centerY, sunRadius * 0.5,
+                centerX, centerY, glowRadius
+            );
+            gradient.addColorStop(0, 'rgba(255, 200, 50, 0.6)');
+            gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+            context.fillStyle = gradient;
+            context.fill();
+
+            // Draw sun circle (main marker)
+            context.beginPath();
+            context.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
+            context.fillStyle = 'rgba(255, 220, 50, 0.9)';
+            context.fill();
+
+            // Draw sun outline
+            context.beginPath();
+            context.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(255, 150, 0, 0.8)';
+            context.lineWidth = 3;
+            context.stroke();
+
+            // Create sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(60, 60, 1);
+
+            return sprite;
+        }
+
+        // Update sun marker position in the Three.js scene
+        // Uses the same sphere coordinate system as the grid
+        function updateSunMarkerPosition() {
+            if (!sunMarker || !gridGroup) return;
+
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                sunMarker.visible = false;
+                return;
+            }
+
+            sunMarker.visible = true;
+
+            // Same SPHERE_RADIUS as the grid
+            const SPHERE_RADIUS = 500;
+
+            // Convert sun azimuth and altitude to 3D position
+            // Using the same coordinate system as the grid:
+            // Azimuth: 0 = North = -Z, 90 = East = +X
+            // Altitude: angle above/below horizon
+            const azRad = degToRad(sunAzimuthDeg);
+            const altRad = degToRad(sunAltitudeDeg);
+
+            // Calculate position on the celestial sphere
+            const r = SPHERE_RADIUS * Math.cos(altRad);
+            const y = SPHERE_RADIUS * Math.sin(altRad);
+            const x = Math.sin(azRad) * r;
+            const z = -Math.cos(azRad) * r;
+
+            sunMarker.position.set(x, y, z);
         }
 
         // Create the celestial grid
@@ -1031,6 +1051,10 @@
             });
 
             gridScene.add(gridGroup);
+
+            // Create and add sun marker to the grid
+            sunMarker = createSunMarkerSprite();
+            gridGroup.add(sunMarker);
         }
 
         // Update and render the grid
