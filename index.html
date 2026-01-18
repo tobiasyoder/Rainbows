@@ -1468,7 +1468,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v3.6.0';
+        const VERSION = 'v3.7.0';
 
         // Haptic feedback utility
         // Note: iOS Safari doesn't support haptic feedback via web APIs
@@ -1967,24 +1967,24 @@
             // At 1x zoom (wide FOV): scaleFactor = 1, at 5x zoom: scaleFactor = 0.2
             const zoomFactor = isZoomed ? ZOOM_LEVEL : 1;
 
-            // Sun/Moon: make them 3x bigger when zoomed out for visibility
-            // At 5x zoom they're actual angular size, at 1x they're ~3x bigger visually
-            const celestialScale = isZoomed ? 1 : 2.5;
+            // Sun/Moon: make them much bigger when zoomed out for visibility and beauty
+            // At 5x zoom they're actual angular size, at 1x they're ~4x bigger visually
+            const celestialScale = isZoomed ? 1 : 4;
 
             // Labels should stay constant visual size on screen
             // When zoomed in, FOV is narrower so objects appear larger
             // We need to scale down labels when zoomed in to compensate
             const labelScale = isZoomed ? (1 / ZOOM_LEVEL) : 1;
 
-            // Update sun marker
+            // Update sun marker - larger base scale for more impressive sun
             if (sunMarker) {
-                const baseScale = 25;
+                const baseScale = 30;
                 sunMarker.scale.set(baseScale * celestialScale, baseScale * celestialScale, 1);
             }
 
             // Update moon marker
             if (moonMarker) {
-                const baseScale = 22;
+                const baseScale = 26;
                 moonMarker.scale.set(baseScale * celestialScale, baseScale * celestialScale, 1);
             }
 
@@ -1992,8 +1992,8 @@
             if (sunPathGroup) {
                 sunPathGroup.traverse((child) => {
                     if (child.isSprite) {
-                        // Hour marker base scale is 28
-                        child.scale.set(28 * labelScale, 28 * labelScale, 1);
+                        // Hour marker base scale is 42
+                        child.scale.set(42 * labelScale, 42 * labelScale, 1);
                     }
                 });
             }
@@ -2002,7 +2002,7 @@
             if (moonPathGroup) {
                 moonPathGroup.traverse((child) => {
                     if (child.isSprite) {
-                        child.scale.set(28 * labelScale, 28 * labelScale, 1);
+                        child.scale.set(42 * labelScale, 42 * labelScale, 1);
                     }
                 });
             }
@@ -2818,12 +2818,12 @@
             pathGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             pathGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-            // Multiple lines for thicker appearance
-            for (let l = 0; l < 3; l++) {
+            // Multiple lines for much thicker appearance
+            for (let l = 0; l < 6; l++) {
                 const pathMaterial = new THREE.LineBasicMaterial({
                     vertexColors: true,
                     transparent: true,
-                    opacity: 0.7 / (l + 1),
+                    opacity: 0.8 / (l * 0.5 + 1),
                     depthTest: false,
                     depthWrite: false,
                     blending: THREE.AdditiveBlending
@@ -2831,16 +2831,18 @@
                 group.add(new THREE.Line(pathGeometry.clone(), pathMaterial));
             }
 
-            // Add prominent glow behind the path
-            const glowMaterial = new THREE.LineBasicMaterial({
-                color: 0xFFCC66,
-                transparent: true,
-                opacity: 0.3,
-                depthTest: false,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending
-            });
-            group.add(new THREE.Line(pathGeometry.clone(), glowMaterial));
+            // Add prominent glow behind the path - multiple passes
+            for (let g = 0; g < 3; g++) {
+                const glowMaterial = new THREE.LineBasicMaterial({
+                    color: 0xFFCC66,
+                    transparent: true,
+                    opacity: 0.35 / (g + 1),
+                    depthTest: false,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending
+                });
+                group.add(new THREE.Line(pathGeometry.clone(), glowMaterial));
+            }
 
             // Create hour marker nodes with glow
             hourMarkers.forEach(marker => {
@@ -2899,13 +2901,13 @@
             context.fillStyle = coreGradient;
             context.fill();
 
-            // Hour label - larger font
+            // Hour label - much larger font for visibility
             const displayHour = hour === 0 ? '12a' : hour === 12 ? '12p' : hour > 12 ? `${hour - 12}p` : `${hour}a`;
-            context.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+            context.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
             context.textAlign = 'center';
             context.textBaseline = 'top';
             context.fillStyle = 'rgba(255, 230, 170, 1)';
-            context.fillText(displayHour, centerX, centerY + 14);
+            context.fillText(displayHour, centerX, centerY + 16);
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
@@ -2919,7 +2921,7 @@
             });
 
             const sprite = new THREE.Sprite(material);
-            sprite.scale.set(28, 28, 1);  // Much larger markers
+            sprite.scale.set(42, 42, 1);  // Much larger markers for visibility
 
             return sprite;
         }
@@ -3135,12 +3137,12 @@
             pathGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             pathGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-            // Multiple lines for thicker appearance
-            for (let l = 0; l < 3; l++) {
+            // Multiple lines for much thicker appearance
+            for (let l = 0; l < 6; l++) {
                 const pathMaterial = new THREE.LineBasicMaterial({
                     vertexColors: true,
                     transparent: true,
-                    opacity: 0.6 / (l + 1),
+                    opacity: 0.7 / (l * 0.5 + 1),
                     depthTest: false,
                     depthWrite: false,
                     blending: THREE.AdditiveBlending
@@ -3148,16 +3150,18 @@
                 group.add(new THREE.Line(pathGeometry.clone(), pathMaterial));
             }
 
-            // Add glow behind the path
-            const glowMaterial = new THREE.LineBasicMaterial({
-                color: 0xAABBFF,
-                transparent: true,
-                opacity: 0.25,
-                depthTest: false,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending
-            });
-            group.add(new THREE.Line(pathGeometry.clone(), glowMaterial));
+            // Add prominent glow behind the path - multiple passes
+            for (let g = 0; g < 3; g++) {
+                const glowMaterial = new THREE.LineBasicMaterial({
+                    color: 0xAABBFF,
+                    transparent: true,
+                    opacity: 0.3 / (g + 1),
+                    depthTest: false,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending
+                });
+                group.add(new THREE.Line(pathGeometry.clone(), glowMaterial));
+            }
 
             // Create hour marker nodes with glow
             hourMarkers.forEach(marker => {
@@ -3214,13 +3218,13 @@
             context.fillStyle = coreGradient;
             context.fill();
 
-            // Hour label
+            // Hour label - much larger font for visibility
             const displayHour = hour === 0 ? '12a' : hour === 12 ? '12p' : hour > 12 ? `${hour - 12}p` : `${hour}a`;
-            context.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+            context.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
             context.textAlign = 'center';
             context.textBaseline = 'top';
             context.fillStyle = 'rgba(200, 220, 255, 1)';
-            context.fillText(displayHour, centerX, centerY + 14);
+            context.fillText(displayHour, centerX, centerY + 16);
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
@@ -3234,7 +3238,7 @@
             });
 
             const sprite = new THREE.Sprite(material);
-            sprite.scale.set(28, 28, 1);
+            sprite.scale.set(42, 42, 1);  // Much larger markers for visibility
 
             return sprite;
         }
@@ -3347,11 +3351,11 @@
                         const label = createTextSprite(
                             `${alt > 0 ? '+' : ''}${alt}°`,
                             alt > 0 ? 'rgba(180, 220, 255, 0.9)' : 'rgba(255, 200, 160, 0.85)',
-                            72  // Larger font
+                            36  // Smaller font for altitude
                         );
                         label.position.set(labelX, y, labelZ);
-                        label.scale.set(80, 40, 1);  // Much larger labels
-                        label.userData = { isLabel: true, baseScale: { x: 80, y: 40 } };
+                        label.scale.set(42, 21, 1);  // Smaller altitude labels
+                        label.userData = { isLabel: true, baseScale: { x: 42, y: 21 } };
                         gridGroup.add(label);
                     });
                 }
@@ -3454,17 +3458,17 @@
                     gridGroup.add(new THREE.Line(geometry.clone(), glowMaterial));
                 }
 
-                // Add direction label at horizon level - LARGER
+                // Add direction label at horizon level
                 if (config.label) {
                     const labelRadius = SPHERE_RADIUS * 0.94;
-                    const labelY = config.cardinal ? 55 : 40;
-                    const scaleX = config.cardinal ? 100 : 65;
-                    const scaleY = config.cardinal ? 50 : 32;
+                    const labelY = config.cardinal ? 50 : 35;
+                    const scaleX = config.cardinal ? 65 : 45;
+                    const scaleY = config.cardinal ? 32 : 22;
 
                     const label = createTextSprite(
                         config.label,
                         config.cardinal ? 'rgba(170, 230, 255, 1.0)' : 'rgba(140, 200, 240, 0.9)',
-                        config.cardinal ? 96 : 72  // Much larger font
+                        config.cardinal ? 64 : 48  // Moderate font for directions
                     );
                     label.position.set(
                         Math.sin(azRad) * labelRadius,
@@ -3474,43 +3478,26 @@
                     label.scale.set(scaleX, scaleY, 1);
                     label.userData = { isLabel: true, baseScale: { x: scaleX, y: scaleY } };
                     gridGroup.add(label);
-
-                    // Also add degree label below for cardinals
-                    if (config.cardinal) {
-                        const degLabel = createTextSprite(
-                            `${config.az}°`,
-                            'rgba(180, 180, 180, 0.7)',
-                            40
-                        );
-                        degLabel.position.set(
-                            Math.sin(azRad) * labelRadius,
-                            -25,
-                            -Math.cos(azRad) * labelRadius
-                        );
-                        degLabel.scale.set(38, 19, 1);
-                        degLabel.userData = { isLabel: true, baseScale: { x: 38, y: 19 } };
-                        gridGroup.add(degLabel);
-                    }
                 }
 
                 // Add degree labels for ALL azimuth lines (every 15°)
-                // This adds more degree labels on the grid bars
-                if (!config.cardinal) {
-                    const labelRadius = SPHERE_RADIUS * 0.95;
-                    const degLabel = createTextSprite(
-                        `${config.az}°`,
-                        'rgba(150, 150, 150, 0.6)',
-                        32
-                    );
-                    degLabel.position.set(
-                        Math.sin(azRad) * labelRadius,
-                        -25,
-                        -Math.cos(azRad) * labelRadius
-                    );
-                    degLabel.scale.set(32, 16, 1);
-                    degLabel.userData = { isLabel: true, baseScale: { x: 32, y: 16 } };
-                    gridGroup.add(degLabel);
-                }
+                // These should be clearly visible
+                const labelRadius = SPHERE_RADIUS * 0.95;
+                const degLabel = createTextSprite(
+                    `${config.az}°`,
+                    config.cardinal ? 'rgba(200, 200, 200, 0.85)' : 'rgba(170, 170, 170, 0.75)',
+                    config.cardinal ? 42 : 36  // Larger font for azimuth degrees
+                );
+                degLabel.position.set(
+                    Math.sin(azRad) * labelRadius,
+                    -20,
+                    -Math.cos(azRad) * labelRadius
+                );
+                const degScaleX = config.cardinal ? 48 : 40;
+                const degScaleY = config.cardinal ? 24 : 20;
+                degLabel.scale.set(degScaleX, degScaleY, 1);
+                degLabel.userData = { isLabel: true, baseScale: { x: degScaleX, y: degScaleY } };
+                gridGroup.add(degLabel);
             });
 
             gridScene.add(gridGroup);
