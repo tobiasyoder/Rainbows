@@ -1098,6 +1098,10 @@
                 </div>
                 <div class="section-content" id="content-orientation">
                     <div class="row">
+                        <span class="label">Start HDG</span>
+                        <span class="value" id="start-heading">--°</span>
+                    </div>
+                    <div class="row">
                         <span class="label">HDG</span>
                         <span class="value" id="heading">--°</span>
                     </div>
@@ -1202,7 +1206,7 @@
     <div id="offset-input-modal">
         <div id="offset-input-content">
             <label for="offset-input">Compass Offset (°)</label>
-            <input type="number" id="offset-input" min="-180" max="180" step="1" value="0">
+            <input type="number" id="offset-input" min="-360" max="360" step="1" value="0">
             <div class="offset-input-buttons">
                 <button class="offset-input-btn" id="offset-cancel-btn">Cancel</button>
                 <button class="offset-input-btn" id="offset-apply-btn">Apply</button>
@@ -1276,6 +1280,7 @@
         // Debug value elements
         const latEl = document.getElementById('lat');
         const lonEl = document.getElementById('lon');
+        const startHdgEl = document.getElementById('start-heading');
         const headingEl = document.getElementById('heading');
         const pitchEl = document.getElementById('pitch');
         const rollEl = document.getElementById('roll');
@@ -1410,6 +1415,10 @@
         let hasCompassHeading = false;
         const HEADING_SMOOTHING = 0.3;  // Lower = smoother but more lag, higher = more responsive
 
+        // Start heading - captured when three.js initializes its orientation
+        let startHeadingDeg = null;
+        let needsCaptureStartHdg = false;  // Flag to capture next compass reading as start heading
+
         // Toggle entire panel
         function togglePanel() {
             triggerHaptic('light');
@@ -1443,6 +1452,16 @@
             if (!gridGroup) return;
             // Rotate the entire grid around Y axis by the compass offset
             gridGroup.rotation.y = degToRad(-compassOffset);
+        }
+
+        // Update compass offset UI (thumb position and value display)
+        function updateCompassUI() {
+            const maxOffset = 30;
+            // Clamp thumb position to slider range, but allow larger values
+            const clampedOffset = Math.max(-maxOffset, Math.min(maxOffset, compassOffset));
+            const percent = ((clampedOffset + maxOffset) / (maxOffset * 2)) * 100;
+            compassOffsetThumb.style.left = `${percent}%`;
+            compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
         }
 
         // Show error message
@@ -1779,6 +1798,11 @@
 
             // Create DeviceOrientationControls
             orientationControls = new THREE.DeviceOrientationControls(threeCamera);
+
+            // Reset start heading - will be captured from next compass reading
+            startHeadingDeg = null;
+            needsCaptureStartHdg = true;
+            startHdgEl.textContent = '--°';
 
             // Initialize the grid overlay
             initGridOverlay();
@@ -2597,6 +2621,21 @@
                 targetHeadingDeg = normalizeAngle(360 - event.alpha);
                 hasCompassHeading = true;
             }
+
+            // Capture start heading when three.js has just initialized
+            // This heading represents the offset between three.js north and true north
+            if (needsCaptureStartHdg && hasCompassHeading) {
+                startHeadingDeg = targetHeadingDeg;
+                startHdgEl.textContent = Math.round(startHeadingDeg) + '°';
+                needsCaptureStartHdg = false;
+
+                // Apply negated start heading as compass offset to align three.js north with true north
+                // Three.js thinks we're facing "north", but we're actually facing startHeadingDeg
+                // So we rotate the grid by -startHeadingDeg to compensate
+                compassOffset = -Math.round(startHeadingDeg);
+                applyCompassOffset();
+                updateCompassUI();
+            }
         }
 
         // Start listening for compass heading
@@ -2704,6 +2743,10 @@
                     videoElement.play();
                 }
                 if (orientationControls && !animationId) {
+                    // Reset start heading - three.js resets orientation on visibility change
+                    startHeadingDeg = null;
+                    needsCaptureStartHdg = true;
+                    startHdgEl.textContent = '--°';
                     updateOrientation();
                 }
             }
@@ -3046,13 +3089,9 @@
         // Offset input modal handlers
         offsetApplyBtn.addEventListener('click', () => {
             const value = parseInt(offsetInput.value);
-            if (!isNaN(value) && value >= -180 && value <= 180) {
+            if (!isNaN(value) && value >= -360 && value <= 360) {
                 compassOffset = value;
-                // Update thumb position
-                const maxOffset = 30;
-                const percent = ((Math.max(-30, Math.min(30, compassOffset)) + maxOffset) / (maxOffset * 2)) * 100;
-                compassOffsetThumb.style.left = `${percent}%`;
-                compassOffsetValue.textContent = `${compassOffset > 0 ? '+' : ''}${compassOffset}°`;
+                updateCompassUI();
                 applyCompassOffset();
                 triggerHaptic('success');
             } else {
