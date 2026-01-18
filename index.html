@@ -538,6 +538,106 @@
             font-family: 'Courier New', Courier, monospace;
         }
 
+        /* Celestial Objects Toggle Section */
+        .celestial-toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .celestial-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .celestial-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .celestial-icon.disabled {
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+
+        .celestial-label {
+            flex: 1;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 0.3px;
+        }
+
+        .celestial-switch {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .celestial-switch.active {
+            background: linear-gradient(135deg, rgba(100, 200, 255, 0.5) 0%, rgba(50, 150, 255, 0.4) 100%);
+            border-color: rgba(100, 200, 255, 0.4);
+        }
+
+        .celestial-switch .switch-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border-radius: 50%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .celestial-switch.active .switch-knob {
+            transform: translateX(16px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(100, 200, 255, 0.5);
+        }
+
+        /* Celestial object visibility transitions */
+        .celestial-fade-enter {
+            animation: celestialFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .celestial-fade-exit {
+            animation: celestialFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes celestialFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes celestialFadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+
         .hidden {
             display: none !important;
         }
@@ -1051,7 +1151,7 @@
     </div>
 
     <div id="start-screen">
-        <div id="version">v3.3.0</div>
+        <div id="version">v3.4.0</div>
         <div id="app-title">Rainbows</div>
         <div id="app-subtitle">AR Photography Planner</div>
         <button id="start-btn">Start</button>
@@ -1069,7 +1169,7 @@
         </div>
 
         <div class="panel-content" id="panel-content">
-            <div class="version-line">v3.3.0</div>
+            <div class="version-line">v3.4.0</div>
 
             <!-- Location Section -->
             <div class="section" data-section="location">
@@ -1174,6 +1274,39 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Celestial Objects Section -->
+            <div class="section" data-section="celestial">
+                <div class="section-header" onclick="toggleSection('celestial'); event.stopPropagation();">
+                    <span class="section-title">Celestial Objects</span>
+                    <span class="section-toggle" id="toggle-celestial">▼</span>
+                </div>
+                <div class="section-content" id="content-celestial">
+                    <div class="celestial-toggles">
+                        <div class="celestial-toggle-row" id="toggle-row-sun">
+                            <span class="celestial-icon" id="icon-sun">☀️</span>
+                            <span class="celestial-label">Sun</span>
+                            <div class="celestial-switch active" id="switch-sun" onclick="toggleCelestial('sun')">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                        <div class="celestial-toggle-row" id="toggle-row-sunpath">
+                            <span class="celestial-icon" id="icon-sunpath">◐</span>
+                            <span class="celestial-label">Sun Path</span>
+                            <div class="celestial-switch active" id="switch-sunpath" onclick="toggleCelestial('sunpath')">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                        <div class="celestial-toggle-row" id="toggle-row-rainbow">
+                            <span class="celestial-icon" id="icon-rainbow">🌈</span>
+                            <span class="celestial-label">Rainbow</span>
+                            <div class="celestial-switch active" id="switch-rainbow" onclick="toggleCelestial('rainbow')">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1232,7 +1365,7 @@
     <div id="error-message"></div>
 
     <script>
-        const VERSION = 'v3.3.0';
+        const VERSION = 'v3.4.0';
 
         // Haptic feedback utility
         // Note: iOS Safari doesn't support haptic feedback via web APIs
@@ -1352,7 +1485,8 @@
             orientation: true,
             sun: true,
             antisolar: true,
-            compass: true
+            compass: true,
+            celestial: true
         };
 
         // Three.js objects
@@ -1368,6 +1502,49 @@
         let sunMarker = null;  // Three.js sun marker sprite
         let antiSolarMarker = null;  // Anti-solar point marker
         let rainbowRing = null;  // Rainbow ring around anti-solar point
+        let sunPathGroup = null;  // Sun path arc with hour markers
+
+        // Celestial object visibility states
+        let celestialVisible = {
+            sun: true,
+            sunpath: true,
+            rainbow: true
+        };
+
+        // Toggle celestial object visibility with animation
+        function toggleCelestial(type) {
+            triggerHaptic('light');
+            celestialVisible[type] = !celestialVisible[type];
+
+            const switchEl = document.getElementById(`switch-${type}`);
+            const iconEl = document.getElementById(`icon-${type}`);
+
+            if (celestialVisible[type]) {
+                switchEl.classList.add('active');
+                iconEl.classList.remove('disabled');
+            } else {
+                switchEl.classList.remove('active');
+                iconEl.classList.add('disabled');
+            }
+
+            // Apply visibility to Three.js objects
+            updateCelestialVisibility();
+        }
+
+        function updateCelestialVisibility() {
+            if (sunMarker) {
+                sunMarker.visible = celestialVisible.sun && sunMarker.userData.shouldBeVisible !== false;
+            }
+            if (sunPathGroup) {
+                sunPathGroup.visible = celestialVisible.sunpath;
+            }
+            if (rainbowRing) {
+                rainbowRing.visible = celestialVisible.rainbow && rainbowRing.userData.shouldBeVisible !== false;
+            }
+            if (antiSolarMarker) {
+                antiSolarMarker.visible = celestialVisible.rainbow && antiSolarMarker.userData.shouldBeVisible !== false;
+            }
+        }
 
         // Horizon canvas
         const horizonCanvas = document.getElementById('horizon-canvas');
@@ -1498,7 +1675,7 @@
 
                         // Check for standard stabilization modes
                         if (capabilities.stabilizationMode) {
-                            // Prefer 'cinematic-extended' > 'cinematic' > 'standard' > 'auto'
+                            // Prefer 'cinematic-extended' > 'cinematic' > 'standard' > 'auto' > 'on'
                             const modes = capabilities.stabilizationMode;
                             let preferredMode = null;
                             if (modes.includes('cinematic-extended')) {
@@ -1509,11 +1686,19 @@
                                 preferredMode = 'standard';
                             } else if (modes.includes('auto')) {
                                 preferredMode = 'auto';
+                            } else if (modes.includes('on')) {
+                                preferredMode = 'on';
                             }
                             if (preferredMode) {
                                 advancedConstraints.push({ stabilizationMode: preferredMode });
                                 console.log('Using stabilization mode:', preferredMode);
                             }
+                        }
+
+                        // Also try videoStabilization for older Android devices
+                        if (capabilities.videoStabilization) {
+                            advancedConstraints.push({ videoStabilization: true });
+                            console.log('Enabling videoStabilization');
                         }
 
                         // Apply stabilization constraints
@@ -1605,6 +1790,14 @@
 
             // Animate the Three.js camera FOV to match
             animateFOV(targetFOV);
+
+            // Increase pixel ratio when zoomed for sharper rendering
+            if (gridRenderer) {
+                const baseDPR = window.devicePixelRatio || 1;
+                // Use higher pixel ratio when zoomed to reduce pixelation
+                const zoomedDPR = isZoomed ? Math.min(baseDPR * 1.5, 3) : baseDPR;
+                gridRenderer.setPixelRatio(zoomedDPR);
+            }
         }
 
         // Animate FOV change smoothly
@@ -1781,6 +1974,8 @@
             updateSunMarkerPosition();
             // Update anti-solar marker and rainbow
             updateAntiSolarMarkerPosition();
+            // Update sun path when position changes
+            updateSunPath();
         }
 
         // Calculate angular difference with wraparound handling
@@ -1882,49 +2077,75 @@
         }
 
         // Create sun marker sprite for Three.js scene
+        // Sun angular diameter is ~0.5° - we make it slightly larger for visibility with beautiful glow
         function createSunMarkerSprite() {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            const size = 128;
+            const size = 256;  // Higher resolution for quality
             canvas.width = size;
             canvas.height = size;
 
             const centerX = size / 2;
             const centerY = size / 2;
-            const glowRadius = size / 2;
-            const sunRadius = size / 3;
 
             // Clear with transparent background
             context.clearRect(0, 0, size, size);
 
-            // Draw sun glow (outer)
-            const gradient = context.createRadialGradient(
-                centerX, centerY, sunRadius * 0.5,
-                centerX, centerY, glowRadius
+            // Multi-layer glow for realistic sun appearance
+            // Outermost corona glow
+            const coronaGradient = context.createRadialGradient(
+                centerX, centerY, size * 0.1,
+                centerX, centerY, size * 0.5
             );
-            gradient.addColorStop(0, 'rgba(255, 200, 50, 0.6)');
-            gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            coronaGradient.addColorStop(0, 'rgba(255, 200, 100, 0.4)');
+            coronaGradient.addColorStop(0.3, 'rgba(255, 150, 50, 0.2)');
+            coronaGradient.addColorStop(0.6, 'rgba(255, 100, 30, 0.08)');
+            coronaGradient.addColorStop(1, 'rgba(255, 80, 20, 0)');
 
             context.beginPath();
-            context.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-            context.fillStyle = gradient;
+            context.arc(centerX, centerY, size * 0.5, 0, Math.PI * 2);
+            context.fillStyle = coronaGradient;
             context.fill();
 
-            // Draw sun circle (main marker)
+            // Inner glow layer
+            const innerGlow = context.createRadialGradient(
+                centerX, centerY, size * 0.04,
+                centerX, centerY, size * 0.2
+            );
+            innerGlow.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
+            innerGlow.addColorStop(0.3, 'rgba(255, 230, 100, 0.6)');
+            innerGlow.addColorStop(0.6, 'rgba(255, 180, 50, 0.3)');
+            innerGlow.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
             context.beginPath();
-            context.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
-            context.fillStyle = 'rgba(255, 220, 50, 0.9)';
+            context.arc(centerX, centerY, size * 0.2, 0, Math.PI * 2);
+            context.fillStyle = innerGlow;
             context.fill();
 
-            // Draw sun outline
+            // Sun disc core - sized for ~0.5° angular diameter (scaled up slightly for visibility)
+            const sunRadius = size * 0.06;  // Core sun disc
+            const coreGradient = context.createRadialGradient(
+                centerX - sunRadius * 0.2, centerY - sunRadius * 0.2, 0,
+                centerX, centerY, sunRadius
+            );
+            coreGradient.addColorStop(0, 'rgba(255, 255, 240, 1)');
+            coreGradient.addColorStop(0.5, 'rgba(255, 245, 180, 1)');
+            coreGradient.addColorStop(0.8, 'rgba(255, 220, 100, 1)');
+            coreGradient.addColorStop(1, 'rgba(255, 180, 50, 1)');
+
             context.beginPath();
             context.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
-            context.strokeStyle = 'rgba(255, 150, 0, 0.8)';
-            context.lineWidth = 3;
+            context.fillStyle = coreGradient;
+            context.fill();
+
+            // Limb darkening edge
+            context.beginPath();
+            context.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(255, 160, 50, 0.6)';
+            context.lineWidth = 2;
             context.stroke();
 
-            // Create sprite
+            // Create sprite with additive blending for glow effect
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
 
@@ -1932,11 +2153,14 @@
                 map: texture,
                 transparent: true,
                 depthTest: false,
-                depthWrite: false
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
             });
 
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(60, 60, 1);
+            // Scale for proper angular size (~0.5° core with glow extending further)
+            // At SPHERE_RADIUS 500, 0.5° ≈ 4.36 units, but we show glow larger for effect
+            sprite.scale.set(25, 25, 1);
 
             return sprite;
         }
@@ -1949,11 +2173,13 @@
 
             const gps = getCurrentGPS();
             if (gps.lat === null || gps.lon === null) {
+                sunMarker.userData.shouldBeVisible = false;
                 sunMarker.visible = false;
                 return;
             }
 
-            sunMarker.visible = true;
+            sunMarker.userData.shouldBeVisible = true;
+            sunMarker.visible = celestialVisible.sun;
 
             // Same SPHERE_RADIUS as the grid
             const SPHERE_RADIUS = 500;
@@ -2034,63 +2260,65 @@
         }
 
         // Create rainbow ring around anti-solar point
-        // Primary rainbow appears at ~42° from the anti-solar point
-        // Creates a filled gradient band using a mesh with vertex colors
+        // Primary rainbow: 40-42° from anti-solar point (2° wide)
+        // Creates a beautiful glowing band with smooth color gradients
         function createRainbowRing() {
             const SPHERE_RADIUS = 500;
-            const RAINBOW_ANGLE = 42; // Primary rainbow at 42° from anti-solar point
-            const RAINBOW_WIDTH = 2.5; // Width of rainbow band in degrees
+            const RAINBOW_INNER = 40;  // Inner edge at 40°
+            const RAINBOW_OUTER = 42;  // Outer edge at 42°
+            const RAINBOW_WIDTH = RAINBOW_OUTER - RAINBOW_INNER;  // 2° actual width
             const group = new THREE.Group();
 
-            // Rainbow colors (inner to outer): violet, indigo, blue, green, yellow, orange, red
+            // Rainbow colors with more color stops for smoother gradient
+            // Inner (violet) to outer (red) - reversed from usual since inner edge is at smaller angle
             const rainbowColors = [
-                new THREE.Color(0x9400D3), // Violet (inner)
+                new THREE.Color(0x8B00FF), // Violet (inner, at 40°)
                 new THREE.Color(0x4B0082), // Indigo
-                new THREE.Color(0x0000FF), // Blue
-                new THREE.Color(0x00FFFF), // Cyan
+                new THREE.Color(0x0066FF), // Blue
+                new THREE.Color(0x00CCFF), // Cyan-blue
+                new THREE.Color(0x00FF88), // Cyan-green
                 new THREE.Color(0x00FF00), // Green
+                new THREE.Color(0x88FF00), // Yellow-green
                 new THREE.Color(0xFFFF00), // Yellow
-                new THREE.Color(0xFF7F00), // Orange
-                new THREE.Color(0xFF0000)  // Red (outer)
+                new THREE.Color(0xFFAA00), // Orange-yellow
+                new THREE.Color(0xFF6600), // Orange
+                new THREE.Color(0xFF0000)  // Red (outer, at 42°)
             ];
 
-            const segments = 128; // Around the circle
-            const rings = rainbowColors.length; // Color bands
+            const segments = 192;  // Higher segment count for smoother circle
+            const rings = rainbowColors.length;
 
+            // Create main rainbow band with vertex colors and alpha gradient
             const positions = [];
             const colors = [];
+            const alphas = [];
             const indices = [];
 
-            // Create vertices for each ring
             for (let r = 0; r < rings; r++) {
-                const t = r / (rings - 1); // 0 to 1
-                const angle = RAINBOW_ANGLE - RAINBOW_WIDTH + (t * RAINBOW_WIDTH * 2);
+                const t = r / (rings - 1);
+                const angle = RAINBOW_INNER + (t * RAINBOW_WIDTH);
                 const color = rainbowColors[r];
+
+                // Alpha falloff at edges for soft glow effect
+                let alpha = 1.0;
+                if (t < 0.15) alpha = t / 0.15;
+                else if (t > 0.85) alpha = (1 - t) / 0.15;
 
                 for (let i = 0; i <= segments; i++) {
                     const phi = (i / segments) * Math.PI * 2;
-
-                    // Calculate position on sphere at this angle from center
                     const rad = SPHERE_RADIUS * Math.sin(degToRad(angle));
                     const y = SPHERE_RADIUS * Math.cos(degToRad(angle));
 
-                    positions.push(
-                        Math.cos(phi) * rad,
-                        y,
-                        Math.sin(phi) * rad
-                    );
-
+                    positions.push(Math.cos(phi) * rad, y, Math.sin(phi) * rad);
                     colors.push(color.r, color.g, color.b);
+                    alphas.push(alpha);
                 }
             }
 
-            // Create triangle indices to connect the rings
             for (let r = 0; r < rings - 1; r++) {
                 for (let i = 0; i < segments; i++) {
                     const current = r * (segments + 1) + i;
                     const next = current + segments + 1;
-
-                    // Two triangles per quad
                     indices.push(current, next, current + 1);
                     indices.push(current + 1, next, next + 1);
                 }
@@ -2099,40 +2327,109 @@
             const geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.setAttribute('alpha', new THREE.Float32BufferAttribute(alphas, 1));
             geometry.setIndex(indices);
 
-            const material = new THREE.MeshBasicMaterial({
+            // Custom shader material for beautiful rainbow glow
+            const rainbowMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    opacity: { value: 0.35 }
+                },
+                vertexShader: `
+                    attribute float alpha;
+                    varying vec3 vColor;
+                    varying float vAlpha;
+                    void main() {
+                        vColor = color;
+                        vAlpha = alpha;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float opacity;
+                    varying vec3 vColor;
+                    varying float vAlpha;
+                    void main() {
+                        vec3 glowColor = vColor * 1.3;  // Slight bloom
+                        float finalAlpha = vAlpha * opacity;
+                        gl_FragColor = vec4(glowColor, finalAlpha);
+                    }
+                `,
                 vertexColors: true,
                 transparent: true,
-                opacity: 0.2,
                 side: THREE.DoubleSide,
                 depthTest: false,
-                depthWrite: false
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
             });
 
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(geometry, rainbowMaterial);
             group.add(mesh);
 
-            // Add a subtle outer glow line
-            const outerAngle = RAINBOW_ANGLE + RAINBOW_WIDTH + 0.5;
-            const glowGeometry = new THREE.BufferGeometry();
-            const glowPositions = [];
-            for (let i = 0; i <= segments; i++) {
-                const phi = (i / segments) * Math.PI * 2;
-                const rad = SPHERE_RADIUS * Math.sin(degToRad(outerAngle));
-                const y = SPHERE_RADIUS * Math.cos(degToRad(outerAngle));
-                glowPositions.push(Math.cos(phi) * rad, y, Math.sin(phi) * rad);
-            }
-            glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(glowPositions, 3));
-            const glowMaterial = new THREE.LineBasicMaterial({
-                color: 0xFF6666,
-                transparent: true,
-                opacity: 0.1,
-                depthTest: false,
-                depthWrite: false
+            // Add outer glow layers for ethereal effect
+            const glowLayers = [
+                { offset: 0.3, opacity: 0.08, color: 0xFF4444 },
+                { offset: 0.6, opacity: 0.05, color: 0xFF6666 },
+                { offset: 1.0, opacity: 0.03, color: 0xFF8888 }
+            ];
+
+            glowLayers.forEach(layer => {
+                const glowAngle = RAINBOW_OUTER + layer.offset;
+                const glowGeometry = new THREE.BufferGeometry();
+                const glowPositions = [];
+
+                for (let i = 0; i <= segments; i++) {
+                    const phi = (i / segments) * Math.PI * 2;
+                    const rad = SPHERE_RADIUS * Math.sin(degToRad(glowAngle));
+                    const y = SPHERE_RADIUS * Math.cos(degToRad(glowAngle));
+                    glowPositions.push(Math.cos(phi) * rad, y, Math.sin(phi) * rad);
+                }
+
+                glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(glowPositions, 3));
+
+                const glowMaterial = new THREE.LineBasicMaterial({
+                    color: layer.color,
+                    transparent: true,
+                    opacity: layer.opacity,
+                    depthTest: false,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending
+                });
+
+                group.add(new THREE.Line(glowGeometry, glowMaterial));
             });
-            const glowLine = new THREE.Line(glowGeometry, glowMaterial);
-            group.add(glowLine);
+
+            // Add inner glow layers
+            const innerGlowLayers = [
+                { offset: 0.3, opacity: 0.08, color: 0x8844FF },
+                { offset: 0.6, opacity: 0.05, color: 0x6666FF }
+            ];
+
+            innerGlowLayers.forEach(layer => {
+                const glowAngle = RAINBOW_INNER - layer.offset;
+                const glowGeometry = new THREE.BufferGeometry();
+                const glowPositions = [];
+
+                for (let i = 0; i <= segments; i++) {
+                    const phi = (i / segments) * Math.PI * 2;
+                    const rad = SPHERE_RADIUS * Math.sin(degToRad(glowAngle));
+                    const y = SPHERE_RADIUS * Math.cos(degToRad(glowAngle));
+                    glowPositions.push(Math.cos(phi) * rad, y, Math.sin(phi) * rad);
+                }
+
+                glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(glowPositions, 3));
+
+                const glowMaterial = new THREE.LineBasicMaterial({
+                    color: layer.color,
+                    transparent: true,
+                    opacity: layer.opacity,
+                    depthTest: false,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending
+                });
+
+                group.add(new THREE.Line(glowGeometry, glowMaterial));
+            });
 
             return group;
         }
@@ -2147,10 +2444,11 @@
 
             // Update anti-solar marker
             if (antiSolarMarker) {
+                antiSolarMarker.userData.shouldBeVisible = hasGPS;
                 if (!hasGPS) {
                     antiSolarMarker.visible = false;
                 } else {
-                    antiSolarMarker.visible = true;
+                    antiSolarMarker.visible = celestialVisible.rainbow;
 
                     const SPHERE_RADIUS = 500;
                     const azRad = degToRad(antiSolarAzimuthDeg);
@@ -2167,10 +2465,11 @@
 
             // Update rainbow ring orientation
             if (rainbowRing) {
+                rainbowRing.userData.shouldBeVisible = hasGPS;
                 if (!hasGPS) {
                     rainbowRing.visible = false;
                 } else {
-                    rainbowRing.visible = true;
+                    rainbowRing.visible = celestialVisible.rainbow;
 
                     // Reset rotation
                     rainbowRing.rotation.set(0, 0, 0);
@@ -2198,6 +2497,204 @@
             }
         }
 
+        // Create sun path arc showing the sun's journey across the sky
+        // Includes hour markers with glowing nodes
+        function createSunPath() {
+            const group = new THREE.Group();
+            const SPHERE_RADIUS = 500;
+
+            const gps = getCurrentGPS();
+            if (gps.lat === null || gps.lon === null) {
+                return group;
+            }
+
+            // Calculate sun positions throughout the day
+            const pathPoints = [];
+            const hourMarkers = [];
+            const currentDate = selectedDateTime || new Date();
+            const dayStart = new Date(currentDate);
+            dayStart.setHours(0, 0, 0, 0);
+
+            // Sample sun position every 15 minutes
+            for (let minutes = 0; minutes <= 24 * 60; minutes += 15) {
+                const sampleTime = new Date(dayStart.getTime() + minutes * 60 * 1000);
+                const sunPos = SunCalc.getPosition(sampleTime, gps.lat, gps.lon);
+
+                const azimuth = sunPos.azimuth + Math.PI;  // Convert to compass bearing
+                const altitude = sunPos.altitude;  // Already in radians
+
+                // Only include points above a certain altitude (visible sun)
+                if (altitude > degToRad(-5)) {
+                    const r = SPHERE_RADIUS * Math.cos(altitude);
+                    const y = SPHERE_RADIUS * Math.sin(altitude);
+                    const x = Math.sin(azimuth) * r;
+                    const z = -Math.cos(azimuth) * r;
+
+                    pathPoints.push(new THREE.Vector3(x, y, z));
+
+                    // Mark hour positions
+                    if (minutes % 60 === 0) {
+                        const hour = Math.floor(minutes / 60);
+                        hourMarkers.push({
+                            position: new THREE.Vector3(x, y, z),
+                            hour: hour,
+                            altitude: altitude
+                        });
+                    }
+                }
+            }
+
+            if (pathPoints.length < 2) {
+                return group;
+            }
+
+            // Create smooth path curve
+            const curve = new THREE.CatmullRomCurve3(pathPoints);
+            const curvePoints = curve.getPoints(pathPoints.length * 4);
+
+            // Create path line with gradient effect
+            const pathGeometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+
+            curvePoints.forEach((point, i) => {
+                positions.push(point.x, point.y, point.z);
+
+                // Color gradient based on altitude (warmer near horizon, cooler higher up)
+                const t = i / curvePoints.length;
+                const altitude = point.y / SPHERE_RADIUS;
+                const warmth = Math.max(0, 1 - altitude * 2);
+
+                colors.push(
+                    1.0,  // R
+                    0.7 + warmth * 0.2,  // G
+                    0.3 + warmth * 0.4   // B
+                );
+            });
+
+            pathGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            pathGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            const pathMaterial = new THREE.LineBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            const pathLine = new THREE.Line(pathGeometry, pathMaterial);
+            group.add(pathLine);
+
+            // Add glow line behind the path
+            const glowMaterial = new THREE.LineBasicMaterial({
+                color: 0xFFAA44,
+                transparent: true,
+                opacity: 0.15,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            group.add(new THREE.Line(pathGeometry.clone(), glowMaterial));
+
+            // Create hour marker nodes with glow
+            hourMarkers.forEach(marker => {
+                if (marker.altitude < degToRad(-2)) return;  // Skip markers below horizon
+
+                // Create glowing hour marker sprite
+                const markerSprite = createHourMarkerSprite(marker.hour);
+                markerSprite.position.copy(marker.position);
+                group.add(markerSprite);
+            });
+
+            return group;
+        }
+
+        // Create a glowing hour marker sprite
+        function createHourMarkerSprite(hour) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const size = 64;
+            canvas.width = size;
+            canvas.height = size;
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+
+            // Clear
+            context.clearRect(0, 0, size, size);
+
+            // Outer glow
+            const glowGradient = context.createRadialGradient(
+                centerX, centerY, 2,
+                centerX, centerY, size / 2
+            );
+            glowGradient.addColorStop(0, 'rgba(255, 180, 80, 0.6)');
+            glowGradient.addColorStop(0.3, 'rgba(255, 150, 60, 0.3)');
+            glowGradient.addColorStop(0.6, 'rgba(255, 120, 40, 0.1)');
+            glowGradient.addColorStop(1, 'rgba(255, 100, 30, 0)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
+            context.fillStyle = glowGradient;
+            context.fill();
+
+            // Core dot
+            const coreGradient = context.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, 4
+            );
+            coreGradient.addColorStop(0, 'rgba(255, 255, 220, 1)');
+            coreGradient.addColorStop(0.5, 'rgba(255, 220, 150, 0.9)');
+            coreGradient.addColorStop(1, 'rgba(255, 180, 100, 0.7)');
+
+            context.beginPath();
+            context.arc(centerX, centerY, 4, 0, Math.PI * 2);
+            context.fillStyle = coreGradient;
+            context.fill();
+
+            // Hour label
+            const displayHour = hour === 0 ? '12a' : hour === 12 ? '12p' : hour > 12 ? `${hour - 12}p` : `${hour}a`;
+            context.font = 'bold 10px -apple-system, BlinkMacSystemFont, sans-serif';
+            context.textAlign = 'center';
+            context.textBaseline = 'top';
+            context.fillStyle = 'rgba(255, 220, 150, 0.9)';
+            context.fillText(displayHour, centerX, centerY + 8);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(12, 12, 1);
+
+            return sprite;
+        }
+
+        // Update sun path when date/time or location changes
+        function updateSunPath() {
+            if (!gridGroup) return;
+
+            // Remove old sun path
+            if (sunPathGroup) {
+                gridGroup.remove(sunPathGroup);
+                sunPathGroup = null;
+            }
+
+            // Create new sun path
+            sunPathGroup = createSunPath();
+            sunPathGroup.visible = celestialVisible.sunpath;
+            gridGroup.add(sunPathGroup);
+        }
+
         // Create the celestial grid
         function createCelestialGrid() {
             gridGroup = new THREE.Group();
@@ -2217,8 +2714,8 @@
                 const circleRadius = SPHERE_RADIUS * Math.cos(altRad);
                 const y = SPHERE_RADIUS * Math.sin(altRad);
 
-                // Create circle geometry
-                const segments = 128;
+                // Create circle geometry with higher segment count for smoothness
+                const segments = 192;
                 const geometry = new THREE.BufferGeometry();
                 const positions = [];
 
@@ -2233,16 +2730,16 @@
 
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
-                // Style based on importance
-                let color, opacity, lineWidth;
+                // Style based on importance - enhanced colors
+                let color, opacity;
                 if (isHorizon) {
-                    color = 0xffffff;
-                    opacity = 0.6;
+                    color = 0x88CCFF;  // Soft cyan-blue for horizon
+                    opacity = 0.7;
                 } else if (isMajor) {
-                    color = 0xaaaaaa;
-                    opacity = 0.4;
+                    color = alt > 0 ? 0x99BBDD : 0xDDBB99;  // Blue tint above, warm below
+                    opacity = 0.45;
                 } else {
-                    color = 0x888888;
+                    color = alt > 0 ? 0x7799BB : 0xBB9977;  // Subtle blue above, warm below
                     opacity = 0.25;
                 }
 
@@ -2256,6 +2753,19 @@
 
                 const line = new THREE.Line(geometry, material);
                 gridGroup.add(line);
+
+                // Add a subtle glow behind the horizon line
+                if (isHorizon) {
+                    const glowMaterial = new THREE.LineBasicMaterial({
+                        color: 0x88CCFF,
+                        transparent: true,
+                        opacity: 0.2,
+                        depthTest: false,
+                        depthWrite: false,
+                        blending: THREE.AdditiveBlending
+                    });
+                    gridGroup.add(new THREE.Line(geometry.clone(), glowMaterial));
+                }
 
                 // Add altitude labels on multiple sides for better visibility
                 if (alt !== 0) {
@@ -2322,8 +2832,8 @@
             azimuthConfig.forEach(config => {
                 const azRad = degToRad(config.az);
 
-                // Create vertical arc from -70 to 70 degrees altitude
-                const segments = 64;
+                // Create vertical arc from -70 to 70 degrees altitude with higher segments
+                const segments = 96;
                 const geometry = new THREE.BufferGeometry();
                 const positions = [];
 
@@ -2343,16 +2853,16 @@
 
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
-                // Style based on importance
+                // Style based on importance - enhanced colors
                 let color, opacity;
                 if (config.cardinal) {
-                    color = 0xffffff;
-                    opacity = 0.6;
+                    color = 0xAADDFF;  // Soft cyan for cardinals
+                    opacity = 0.65;
                 } else if (config.intercardinal) {
-                    color = 0xcccccc;
+                    color = 0x99CCEE;  // Slightly darker cyan
                     opacity = 0.4;
                 } else {
-                    color = 0x888888;
+                    color = 0x6699AA;  // Muted blue-gray
                     opacity = 0.2;
                 }
 
@@ -2367,22 +2877,35 @@
                 const line = new THREE.Line(geometry, material);
                 gridGroup.add(line);
 
+                // Add subtle glow for cardinal directions
+                if (config.cardinal) {
+                    const glowMaterial = new THREE.LineBasicMaterial({
+                        color: 0xAADDFF,
+                        transparent: true,
+                        opacity: 0.15,
+                        depthTest: false,
+                        depthWrite: false,
+                        blending: THREE.AdditiveBlending
+                    });
+                    gridGroup.add(new THREE.Line(geometry.clone(), glowMaterial));
+                }
+
                 // Add direction label at horizon level
                 if (config.label) {
                     const labelRadius = SPHERE_RADIUS * 0.95;
-                    const labelY = config.cardinal ? 35 : 25; // Slightly above horizon
+                    const labelY = config.cardinal ? 40 : 28; // Slightly above horizon
 
                     const label = createTextSprite(
                         config.label,
-                        config.cardinal ? 'rgba(255, 255, 255, 0.95)' : 'rgba(200, 200, 200, 0.8)',
-                        config.cardinal ? 56 : 42
+                        config.cardinal ? 'rgba(170, 220, 255, 0.95)' : 'rgba(150, 200, 230, 0.8)',
+                        config.cardinal ? 60 : 44
                     );
                     label.position.set(
                         Math.sin(azRad) * labelRadius,
                         labelY,
                         -Math.cos(azRad) * labelRadius
                     );
-                    label.scale.set(config.cardinal ? 50 : 35, config.cardinal ? 25 : 17.5, 1);
+                    label.scale.set(config.cardinal ? 55 : 38, config.cardinal ? 27.5 : 19, 1);
                     gridGroup.add(label);
 
                     // Also add degree label below for cardinals
@@ -2434,6 +2957,10 @@
             // Create and add rainbow ring around anti-solar point
             rainbowRing = createRainbowRing();
             gridGroup.add(rainbowRing);
+
+            // Create and add sun path with hour markers
+            sunPathGroup = createSunPath();
+            gridGroup.add(sunPathGroup);
         }
 
         // Update and render the grid
